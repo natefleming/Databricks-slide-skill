@@ -1388,6 +1388,14 @@ class DatabricksSlideGenerator:
 
         new_cSld = deepcopy(source_cSld)
 
+        # --- Resolve scheme colors to explicit RGB values ---
+        # The catalog's theme may differ from the output template's theme.
+        # Convert all schemeClr references to explicit srgbClr values
+        # using the catalog's actual theme colors so they render correctly.
+        theme_colors = self._get_source_theme_colors(source_slide)
+        if theme_colors:
+            self._resolve_scheme_colors(new_cSld, theme_colors)
+
         # --- Inject explicit white background ---
         # The catalog slides may inherit their background from their layout/master
         # which we're not importing. Set an explicit solid white background.
@@ -1464,6 +1472,138 @@ class DatabricksSlideGenerator:
                         target_slide.notes_slide.notes_text_frame.text = source_notes
             except Exception:
                 pass
+
+    def _get_source_theme_colors(self, source_slide):
+        """Extract the color scheme from the source slide's theme.
+
+        Navigates slide -> layout -> master -> theme to find the color
+        scheme, then returns a dict mapping scheme color names
+        (e.g. 'accent1', 'dk1') to hex RGB strings (e.g. '1B5162').
+        """
+        from lxml import etree
+
+        ns_a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+
+        try:
+            master = source_slide.slide_layout.slide_master
+            for rel in master.part.rels.values():
+                if 'theme' in rel.reltype:
+                    theme_xml = etree.fromstring(rel.target_part.blob)
+                    clrScheme = theme_xml.find(f'.//{{{ns_a}}}clrScheme')
+                    if clrScheme is None:
+                        continue
+
+                    colors = {}
+                    for child in clrScheme:
+                        name = etree.QName(child.tag).localname
+                        for color_elem in child:
+                            ctag = etree.QName(color_elem.tag).localname
+                            if ctag == 'srgbClr':
+                                colors[name] = color_elem.get('val')
+                            elif ctag == 'sysClr':
+                                colors[name] = color_elem.get(
+                                    'lastClr', color_elem.get('val', '000000')
+                                )
+
+                    # OOXML aliases: bg1/bg2/tx1/tx2 map to lt1/lt2/dk1/dk2
+                    colors['bg1'] = colors.get('lt1', 'FFFFFF')
+                    colors['bg2'] = colors.get('lt2', 'EEEEEE')
+                    colors['tx1'] = colors.get('dk1', '000000')
+                    colors['tx2'] = colors.get('dk2', '000000')
+                    return colors
+        except Exception:
+            pass
+        return {}
+
+    def _apply_color_transforms(self, hex_color, modifiers):
+        """Apply OOXML color transform children to a base hex color.
+
+        Handles tint, shade, lumMod, lumOff, satMod, satOff in document
+        order per the ECMA-376 spec.  Returns the final hex RGB string.
+        """
+        import colorsys
+
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+
+        for mod_name, mod_val in modifiers:
+            pct = mod_val / 100000.0
+
+            if mod_name == 'tint':
+                # Shift toward white: 100% = no change, 0% = white
+                r = int(r * pct + 255 * (1 - pct))
+                g = int(g * pct + 255 * (1 - pct))
+                b = int(b * pct + 255 * (1 - pct))
+            elif mod_name == 'shade':
+                # Shift toward black: 100% = no change, 0% = black
+                r = int(r * pct)
+                g = int(g * pct)
+                b = int(b * pct)
+            elif mod_name in ('lumMod', 'lumOff', 'satMod', 'satOff'):
+                h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+                if mod_name == 'lumMod':
+                    l *= pct
+                elif mod_name == 'lumOff':
+                    l += pct
+                elif mod_name == 'satMod':
+                    s *= pct
+                elif mod_name == 'satOff':
+                    s += pct
+                l = max(0.0, min(1.0, l))
+                s = max(0.0, min(1.0, s))
+                r2, g2, b2 = colorsys.hls_to_rgb(h, l, s)
+                r, g, b = int(r2 * 255), int(g2 * 255), int(b2 * 255)
+
+        r = max(0, min(255, r))
+        g = max(0, min(255, g))
+        b = max(0, min(255, b))
+        return f'{r:02X}{g:02X}{b:02X}'
+
+    def _resolve_scheme_colors(self, element, color_map):
+        """Replace all schemeClr references with explicit srgbClr values.
+
+        This ensures imported catalog slides render with the catalog's
+        original colors regardless of the output template's theme.
+        """
+        from lxml import etree
+
+        ns_a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+
+        for scheme_clr in element.findall(f'.//{{{ns_a}}}schemeClr'):
+            val = scheme_clr.get('val', '')
+            base_hex = color_map.get(val)
+            if base_hex is None:
+                continue
+
+            # Collect transform modifiers and alpha in document order
+            modifiers = []
+            alpha_elem = None
+            for child in scheme_clr:
+                tag = etree.QName(child.tag).localname
+                child_val = child.get('val')
+                if tag == 'alpha':
+                    alpha_elem = deepcopy(child)
+                elif child_val is not None:
+                    try:
+                        modifiers.append((tag, int(child_val)))
+                    except ValueError:
+                        pass
+
+            # Compute final color
+            final_hex = (self._apply_color_transforms(base_hex, modifiers)
+                         if modifiers else base_hex)
+
+            # Build replacement srgbClr element
+            new_elem = etree.Element(f'{{{ns_a}}}srgbClr')
+            new_elem.set('val', final_hex)
+            if alpha_elem is not None:
+                new_elem.append(alpha_elem)
+
+            # Swap in parent
+            parent = scheme_clr.getparent()
+            if parent is not None:
+                parent.replace(scheme_clr, new_elem)
 
     def _add_image_to_slide(self, slide, image_blob: bytes,
                             content_type: str) -> str:
