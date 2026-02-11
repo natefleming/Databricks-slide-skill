@@ -13,6 +13,7 @@ import json
 import argparse
 import re
 import sys
+from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
@@ -35,8 +36,10 @@ SCRIPT_DIR = Path(__file__).parent
 SKILL_DIR = SCRIPT_DIR.parent
 TEMPLATE_PATH = SKILL_DIR / "assets" / "databricks" / "template.pptx"
 THEME_PATH = SKILL_DIR / "themes" / "databricks.json"
+CATALOG_PPTX_PATH = SKILL_DIR / "assets" / "databricks" / "system_architecture_catalog.pptx"
+CATALOG_JSON_PATH = SKILL_DIR / "assets" / "databricks" / "architecture_catalog.json"
 
-# Valid slide types (25 total)
+# Valid slide types (26 total)
 VALID_SLIDE_TYPES = {
     # Existing types (17)
     "title", "section", "content", "two-column", "three-column",
@@ -46,7 +49,9 @@ VALID_SLIDE_TYPES = {
     # New types (8)
     "two-column-icons", "three-column-icons", "cards",
     "card-right", "card-left", "card-full",
-    "one-column", "section-description"
+    "one-column", "section-description",
+    # Imported slides
+    "architecture",
 }
 
 # Layout name mappings (our type -> template layout name patterns)
@@ -1326,6 +1331,191 @@ class DatabricksSlideGenerator:
             tf.anchor = MSO_ANCHOR.MIDDLE
 
     # =========================================================================
+    # Architecture Catalog Import
+    # =========================================================================
+
+    def _get_catalog_prs(self):
+        """Lazy-load the architecture catalog presentation (cached)."""
+        if not hasattr(self, '_catalog_prs'):
+            if not CATALOG_PPTX_PATH.exists():
+                raise FileNotFoundError(
+                    f"Architecture catalog not found: {CATALOG_PPTX_PATH}"
+                )
+            self._catalog_prs = Presentation(str(CATALOG_PPTX_PATH))
+        return self._catalog_prs
+
+    def _import_catalog_slide(self, data: Dict[str, Any]) -> None:
+        """Import a pre-built architecture diagram from the catalog.
+
+        Creates a BLANK slide in the output presentation, then copies
+        the source slide's cSld (common slide data) element to preserve
+        all shapes, positioning, z-ordering, groups, and connectors.
+        Images are remapped from the source to the target presentation.
+
+        Args:
+            data: Slide data dict with required "catalog_slide" (1-based index)
+                  and optional "notes" for custom speaker notes.
+        """
+        from lxml import etree
+
+        catalog_slide_num = data.get("catalog_slide")
+        if catalog_slide_num is None:
+            print("Warning: architecture slide missing 'catalog_slide', skipping")
+            return
+
+        catalog_prs = self._get_catalog_prs()
+        slide_index = catalog_slide_num - 1  # Convert to 0-based
+
+        if slide_index < 0 or slide_index >= len(catalog_prs.slides):
+            print(f"Warning: catalog_slide {catalog_slide_num} out of range "
+                  f"(1-{len(catalog_prs.slides)}), skipping")
+            return
+
+        source_slide = catalog_prs.slides[slide_index]
+
+        # Create a BLANK slide in the output presentation
+        self.slide_count += 1
+        blank_layout = self.layouts.get("BLANK", list(self.layouts.values())[0])
+        target_slide = self.prs.slides.add_slide(blank_layout)
+
+        # --- Copy cSld (common slide data) from source to target ---
+        source_cSld = source_slide._element.find(
+            '{http://schemas.openxmlformats.org/presentationml/2006/main}cSld'
+        )
+        if source_cSld is None:
+            print(f"Warning: No cSld found in catalog slide {catalog_slide_num}")
+            return
+
+        new_cSld = deepcopy(source_cSld)
+
+        # --- Inject explicit white background ---
+        # The catalog slides may inherit their background from their layout/master
+        # which we're not importing. Set an explicit solid white background.
+        nsmap_p = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+        nsmap_a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+
+        # Remove any existing bg element
+        existing_bg = new_cSld.find(f'{{{nsmap_p}}}bg')
+        if existing_bg is None:
+            existing_bg = new_cSld.find(f'{{{nsmap_a}}}bg')
+        if existing_bg is not None:
+            new_cSld.remove(existing_bg)
+
+        # Create explicit white solid fill background
+        bg_xml = (
+            f'<p:bg xmlns:p="{nsmap_p}" xmlns:a="{nsmap_a}">'
+            f'<p:bgPr>'
+            f'<a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>'
+            f'<a:effectLst/>'
+            f'</p:bgPr>'
+            f'</p:bg>'
+        )
+        bg_element = etree.fromstring(bg_xml)
+        new_cSld.insert(0, bg_element)
+
+        # --- Remap image relationships ---
+        nsmap_r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+        blips = new_cSld.findall(f'.//{{{nsmap_a}}}blip')
+
+        rId_map = {}  # old_rId -> new_rId
+        for blip in blips:
+            old_rId = blip.get(f'{{{nsmap_r}}}embed')
+            if not old_rId or old_rId in rId_map:
+                if old_rId and old_rId in rId_map:
+                    blip.set(f'{{{nsmap_r}}}embed', rId_map[old_rId])
+                continue
+
+            # Get image blob from source slide
+            try:
+                source_rel = source_slide.part.rels[old_rId]
+                image_part = source_rel.target_part
+                image_blob = image_part.blob
+                content_type = image_part.content_type
+            except (KeyError, AttributeError):
+                continue
+
+            # Add image to target slide via the package's image handling
+            # This deduplicates by SHA1 hash automatically
+            new_rId = self._add_image_to_slide(
+                target_slide, image_blob, content_type
+            )
+            rId_map[old_rId] = new_rId
+            blip.set(f'{{{nsmap_r}}}embed', new_rId)
+
+        # Replace the target slide's cSld with the copied one
+        target_cSld = target_slide._element.find(
+            f'{{{nsmap_p}}}cSld'
+        )
+        if target_cSld is not None:
+            target_slide._element.replace(target_cSld, new_cSld)
+        else:
+            target_slide._element.insert(0, new_cSld)
+
+        # --- Handle speaker notes ---
+        custom_notes = data.get("notes")
+        if custom_notes:
+            target_slide.notes_slide.notes_text_frame.text = custom_notes
+        else:
+            # Copy notes from the source slide
+            try:
+                if source_slide.has_notes_slide:
+                    source_notes = source_slide.notes_slide.notes_text_frame.text
+                    if source_notes:
+                        target_slide.notes_slide.notes_text_frame.text = source_notes
+            except Exception:
+                pass
+
+    def _add_image_to_slide(self, slide, image_blob: bytes,
+                            content_type: str) -> str:
+        """Add an image blob to a slide and return its relationship ID.
+
+        Uses python-pptx's ImagePart for SHA1-based deduplication.
+        """
+        from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+        from pptx.parts.image import ImagePart
+
+        # Determine file extension from content type
+        ext_map = {
+            'image/png': '.png',
+            'image/jpeg': '.jpg',
+            'image/gif': '.gif',
+            'image/svg+xml': '.svg',
+            'image/x-emf': '.emf',
+            'image/x-wmf': '.wmf',
+            'image/tiff': '.tiff',
+            'image/bmp': '.bmp',
+        }
+        ext = ext_map.get(content_type, '.png')
+
+        # Check if this exact image already exists in the package (by blob hash)
+        package = slide.part.package
+        for part in package.iter_parts():
+            if (part.content_type == content_type and
+                    hasattr(part, 'blob') and part.blob == image_blob):
+                # Image already in package, just add relationship to this slide
+                return slide.part.relate_to(part, RT.IMAGE)
+
+        # Create new image part
+        partname = self._next_image_partname(package, ext)
+        image_part = ImagePart(partname, content_type, package, image_blob)
+        return slide.part.relate_to(image_part, RT.IMAGE)
+
+    def _next_image_partname(self, package, ext: str):
+        """Generate the next available image part name."""
+        from pptx.opc.packuri import PackURI
+
+        existing = set()
+        for part in package.iter_parts():
+            existing.add(str(part.partname))
+
+        n = 1
+        while True:
+            candidate = f'/ppt/media/image{n}{ext}'
+            if candidate not in existing:
+                return PackURI(candidate)
+            n += 1
+
+    # =========================================================================
     # Generation Methods
     # =========================================================================
 
@@ -1362,6 +1552,8 @@ class DatabricksSlideGenerator:
             "comparison": self.add_comparison_slide,
             "checklist": self.add_checklist_slide,
             "logos": self.add_logos_slide,
+            # Imported slides
+            "architecture": self._import_catalog_slide,
         }
 
         for slide_data in slides:

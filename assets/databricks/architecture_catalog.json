@@ -1,0 +1,1006 @@
+{
+  "source": "system_architecture_catalog.pptx",
+  "total_slides": 78,
+  "importable_slides": 55,
+  "sections": [
+    {
+      "title": "System Architecture",
+      "slide": 3,
+      "diagrams": []
+    },
+    {
+      "title": "Positioning",
+      "slide": 4,
+      "diagrams": []
+    },
+    {
+      "title": "Data Intelligence Platform",
+      "slide": 5,
+      "diagrams": [
+        6,
+        7
+      ]
+    },
+    {
+      "title": "Databricks AI",
+      "slide": 8,
+      "diagrams": [
+        9,
+        10
+      ]
+    },
+    {
+      "title": "The Lakehouse and the Data Intelligence Platform",
+      "slide": 11,
+      "diagrams": [
+        12
+      ]
+    },
+    {
+      "title": "High Level Architecture",
+      "slide": 13,
+      "diagrams": [
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "title": "Classic Compute",
+      "slide": 18,
+      "diagrams": [
+        19,
+        20
+      ]
+    },
+    {
+      "title": "SQL Warehouse",
+      "slide": 21,
+      "diagrams": [
+        22,
+        23
+      ]
+    },
+    {
+      "title": "Serverless Compute",
+      "slide": 24,
+      "diagrams": [
+        25,
+        26,
+        27
+      ]
+    },
+    {
+      "title": "Serverless Model Serving, Vector Search, Online Tables",
+      "slide": 28,
+      "diagrams": [
+        29
+      ]
+    },
+    {
+      "title": "Online Transaction Processing",
+      "slide": 30,
+      "diagrams": [
+        31,
+        32
+      ]
+    },
+    {
+      "title": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)",
+      "slide": 33,
+      "diagrams": [
+        34,
+        35,
+        36,
+        37,
+        38
+      ]
+    },
+    {
+      "title": "Scaling Databricks",
+      "slide": 39,
+      "diagrams": [
+        40,
+        41
+      ]
+    },
+    {
+      "title": "High Level \u000bData Architecture",
+      "slide": 42,
+      "diagrams": []
+    },
+    {
+      "title": "Data architecture",
+      "slide": 43,
+      "diagrams": [
+        44,
+        45,
+        46,
+        47
+      ]
+    },
+    {
+      "title": "Data access",
+      "slide": 48,
+      "diagrams": [
+        49,
+        50,
+        51,
+        52,
+        53
+      ]
+    },
+    {
+      "title": "Delta & Iceberg",
+      "slide": 54,
+      "diagrams": [
+        55,
+        56,
+        57
+      ]
+    },
+    {
+      "title": "Lakehouse Monitoring and Observability",
+      "slide": 58,
+      "diagrams": [
+        59,
+        60
+      ]
+    },
+    {
+      "title": "Filesystems in Databricks",
+      "slide": 61,
+      "diagrams": [
+        62,
+        63
+      ]
+    },
+    {
+      "title": "Reference  Architecture",
+      "slide": 64,
+      "diagrams": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "title": "APPENDIX",
+      "slide": 77,
+      "diagrams": [
+        78
+      ]
+    }
+  ],
+  "slides": [
+    {
+      "slide": 3,
+      "title": "System Architecture",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 4,
+      "subtitle": "Cloud agnostic Overview"
+    },
+    {
+      "slide": 4,
+      "title": "Positioning",
+      "kind": "section",
+      "tags": [
+        "overview",
+        "intro"
+      ],
+      "shape_count": 3,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 5,
+      "title": "Data Intelligence Platform",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 6,
+      "title": "Modern Data Platform - Framework",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 26,
+      "subtitle": "‹#›",
+      "talk_track": "This is a simple framework for a modern data platform It shows on top the 5 main persona using the platform: Data engineer ML engineer Data scientist Business analyst Business partner And it comes with 4 layers: The “Storage” layer: All data files are stored in the Cloud Object Storage The “Data Gov...",
+      "section": "Data Intelligence Platform"
+    },
+    {
+      "slide": 7,
+      "title": "Databricks “Data Intelligence Platform”",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 42,
+      "subtitle": "Data Warehouse",
+      "talk_track": "In this view we map the capabilities of the Data Intelligence Platform onto this framework to visualize the scope of the overall platform",
+      "section": "Data Intelligence Platform"
+    },
+    {
+      "slide": 8,
+      "title": "Databricks AI",
+      "kind": "section",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 9,
+      "title": "Mosaic AI",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 16,
+      "talk_track": "This is a more detailed view of the Databricks AI architecture taking the whole Data Intelligence Platform into account. The center is still the 3-step process, the high level “Model” step is qualified a bit more as “Develop and evaluate AI” The Data Intelligence Platform is an open platform. As suc...",
+      "section": "Databricks AI"
+    },
+    {
+      "slide": 10,
+      "title": "Mosaic AI",
+      "kind": "diagram",
+      "tags": [
+        "L200"
+      ],
+      "shape_count": 59,
+      "subtitle": "Cloud Storage",
+      "talk_track": "Drift data Mosaic AI is fully integrated into the Lakehouse platform. For example, for creating features the same Lakehouse capabilities will used as to create ETL pipelines in data engineering. Since AI features are also tables, they are treated exactly like all other tables and exposed and governe...",
+      "section": "Databricks AI"
+    },
+    {
+      "slide": 11,
+      "title": "The Lakehouse and the Data Intelligence Platform",
+      "kind": "section",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 12,
+      "title": "From Lakehouse to Data Intelligence Platform",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 21,
+      "subtitle": "Unified data storage for reliability and sharing",
+      "section": "The Lakehouse and the Data Intelligence Platform"
+    },
+    {
+      "slide": 13,
+      "title": "High Level Architecture",
+      "kind": "section",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 14,
+      "title": "Data Intelligence Platform Overview",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 61,
+      "subtitle": "Serverless Compute Plane",
+      "talk_track": "The Databricks platform runs in two different accounts: The Control Plane (which hosts the Web App, Unity Catalog and management services) and the Serverless Compute Plane (the compute layer of the serverless product) are deployed in the Databricks account The Compute Plane, which is the compute lay...",
+      "section": "High Level Architecture"
+    },
+    {
+      "slide": 15,
+      "title": "Data Intelligence Platform Classic",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 63,
+      "talk_track": "The Databricks platform runs in two different accounts: The Control Plane (which hosts the Web App, Unity Catalog and management services) and the Serverless Compute Plane (the compute layer of the serverless product) are deployed in the Databricks account The Compute Plane, which is the compute lay...",
+      "section": "High Level Architecture"
+    },
+    {
+      "slide": 16,
+      "title": "Data Intelligence Platform Serverless",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 65,
+      "subtitle": "Customer",
+      "talk_track": "The Databricks platform runs in two different accounts: The Control Plane (which hosts the Web App, Unity Catalog and management services) and the Serverless Compute Plane (the compute layer of the serverless product) are deployed in the Databricks account The Compute Plane, which is the compute lay...",
+      "section": "High Level Architecture"
+    },
+    {
+      "slide": 17,
+      "title": "Data Intelligence Platform Serverless",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 66,
+      "subtitle": "Customer",
+      "talk_track": "The Databricks platform runs in two different accounts: The Control Plane (which hosts the Web App, Unity Catalog and management services) and the Serverless Compute Plane (the compute layer of the serverless product) are deployed in the Databricks account The Compute Plane, which is the compute lay...",
+      "section": "High Level Architecture"
+    },
+    {
+      "slide": 18,
+      "title": "Classic Compute",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 19,
+      "title": "High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 23,
+      "talk_track": "To dive a little deeper into the services running in the Databricks subscription. The account console is where you administer your Databricks account: workspace creation, user management, metastore management, … \u000bIt is available for all three clouds The control plane has several services Web App: Se...",
+      "section": "Classic Compute"
+    },
+    {
+      "slide": 20,
+      "title": "Detailed High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 46,
+      "talk_track": "Unity Catalog consists of several capabilities Metastore to hold table schema feature store 2.0 (preview) volumes functions set SQL access permissions Access control based on defined SQL access permissions Data explorer to discover data sets Lineage explorer to understand the end-to-end lineage of e...",
+      "section": "Classic Compute"
+    },
+    {
+      "slide": 21,
+      "title": "SQL Warehouse",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 22,
+      "title": "High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 26,
+      "talk_track": "Instead of just clusters, Databricks SQL uses “SQL Warehouses”, which are compute resource optimized for SQL for all your data warehousing needs. A SQL Warehouse uses one or more compute clusters in the customer’s cloud account behind a load balancer. This allows to scale up and down the warehouse t...",
+      "section": "SQL Warehouse"
+    },
+    {
+      "slide": 23,
+      "title": "Detailed High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 53,
+      "subtitle": "Other data sources",
+      "talk_track": "Databricks SQL uses the same Databricks platform as Databricks Workspaces, as such SSO is supported, it uses the same Web App and, again, Unity Catalog provides data governance services. Instead of notebooks, Databricks SQL provides a SQL Query Editor (Redash) to develop workloads in SQL and to crea...",
+      "section": "SQL Warehouse"
+    },
+    {
+      "slide": 24,
+      "title": "Serverless Compute",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 25,
+      "title": "High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 39,
+      "subtitle": "‹#›",
+      "talk_track": "The quick starting times are achieved by leveraging a pool of “unassigned clusters”: when a customer executes the initial query, a dedicated cluster from the pool will be assigned to the tenant. Between tenants these clusters are isolated on different levels (VM, network, containers, …) Since Server...",
+      "section": "Serverless Compute"
+    },
+    {
+      "slide": 26,
+      "title": "High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 34,
+      "talk_track": "Serverless SQL Warehouse uses the compute resources in the Databricks account, which means that the Compute Plane is now in the customer’s Databricks cloud account (Serverless Compute Plane) instead of the customer cloud account. Serverless SQL  is a secure multi-tenant offering that ensures that cl...",
+      "section": "Serverless Compute"
+    },
+    {
+      "slide": 27,
+      "title": "High Level Architecture - Details",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 33,
+      "subtitle": "‹#›",
+      "talk_track": "The quick starting times are achieved by leveraging a pool of “unassigned clusters”: when a customer executes the initial query, a dedicated cluster from the pool will be assigned to the tenant. Between tenants these clusters are isolated on different levels (VM, network, containers, …) Since Server...",
+      "section": "Serverless Compute"
+    },
+    {
+      "slide": 28,
+      "title": "Serverless Model Serving, Vector Search, Online Tables",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 29,
+      "title": "High Level Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 48,
+      "subtitle": "‹#›",
+      "talk_track": "The quick starting times are achieved by leveraging a pool of “unassigned clusters”: when a customer executes the initial query, a dedicated cluster from the pool will be assigned to the tenant. Between tenants these clusters are isolated on different levels (VM, network, containers, …) Since Server...",
+      "section": "Serverless Model Serving, Vector Search, Online Tables"
+    },
+    {
+      "slide": 30,
+      "title": "Online Transaction Processing",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 31,
+      "title": "High Level Architecture",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 37,
+      "subtitle": "Serverless \u000bCompute",
+      "section": "Online Transaction Processing"
+    },
+    {
+      "slide": 32,
+      "title": "Lakebase integration",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 58,
+      "subtitle": "Lakebase (Postgres OLTP)",
+      "section": "Online Transaction Processing"
+    },
+    {
+      "slide": 33,
+      "title": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 34,
+      "title": "Security Highlights",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 36,
+      "subtitle": "Classic Compute",
+      "talk_track": "Let’s look at some security highlights: “Secure Cluster Connectivity” (SCC) between Databricks Control Plane and Compute Plane: With SCC enabled, customer’s virtual networks have no open ports and the clusters in the Compute Plane have no public IP addresses (SCC is also known as No Public IP / NPIP...",
+      "section": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)"
+    },
+    {
+      "slide": 35,
+      "title": "Secure Cluster Communication workspaces",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 62,
+      "subtitle": "Jobs Manager",
+      "talk_track": "The communication between the different components of the Data Intelligence Platform is secured by TLS. Users will access the Web App via https (port 443), same applies to clients of the REST API Both Control Plane and Compute Plane will connect to the SCC relay on port 443. Furthermore, full job re...",
+      "section": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)"
+    },
+    {
+      "slide": 36,
+      "title": "Private Link for end-to-end private connectivity",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 33,
+      "subtitle": "Compute Plane VNet/VPC",
+      "section": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)"
+    },
+    {
+      "slide": 37,
+      "title": "Customer Managed Keys",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 29,
+      "subtitle": "DB SQL queries",
+      "section": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)"
+    },
+    {
+      "slide": 38,
+      "title": "Lakebase security highlights",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 29,
+      "subtitle": "Serverless \u000b Compute",
+      "section": "Security High Level\u000b(Databricks Workspaces and Databricks SQL)"
+    },
+    {
+      "slide": 39,
+      "title": "Scaling Databricks",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 40,
+      "title": "Scaling Databricks Compute",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 21,
+      "subtitle": "‹#›",
+      "talk_track": "In general information systems can be scaled in different ways. The same hold for the Data Intelligence platform. If you want to analyse large data sets, there are two ways: If your node(s) get too small for the amount of data that needs to be hold in memory on one node, then switch over to a bigger...",
+      "section": "Scaling Databricks"
+    },
+    {
+      "slide": 41,
+      "title": "Multi Workspace Architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 43,
+      "subtitle": "Compute Plane",
+      "talk_track": "Another approach to scale the platform is to split into several workspaces and several cloud storage buckets/containers Besides isolating workloads this can help to overcome workspace limitations or storage limitations",
+      "section": "Scaling Databricks"
+    },
+    {
+      "slide": 42,
+      "title": "High Level \u000bData Architecture",
+      "kind": "section",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 43,
+      "title": "Data architecture",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 44,
+      "title": "Medallion, the best practice pipeline",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 31,
+      "talk_track": "The best practice pipeline consists of three layers: The Bronze layer is where we land all the data from external source systems. The table structures in this layer correspond to the source system table structures \"as-is,\" along with any additional metadata columns that capture the load date/time, p...",
+      "section": "Data architecture"
+    },
+    {
+      "slide": 45,
+      "title": "Data Modeling: Dimensional Modeling for DWHs",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 47,
+      "section": "Data architecture"
+    },
+    {
+      "slide": 46,
+      "title": "Data Modeling: Modern use cases (ML and AI)",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 28,
+      "subtitle": "silver",
+      "section": "Data architecture"
+    },
+    {
+      "slide": 47,
+      "title": "Enhanced medallion architecture",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 30,
+      "talk_track": "Combining both worlds, the data lake approach (Ingestion ⇒ Curation ⇒ Final) with the Data Warehouse approach (Ingestion ⇒ Integration ⇒ Presentation), leads to an extension of the Medallion Architecture",
+      "section": "Data architecture"
+    },
+    {
+      "slide": 48,
+      "title": "Data access",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 49,
+      "title": "High Level Data Access from Databricks",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 29,
+      "subtitle": "External table containers / buckets",
+      "talk_track": "With Unity Catalog and “Shared clusters”, there are two types of storage containers/buckets: The “managed table container/bucket”, that gets created with a metastore to store data of managed tables. There exists one managed table container/bucket per metastore “External table containers/bucket” are ...",
+      "section": "Data access"
+    },
+    {
+      "slide": 50,
+      "title": "Data Access Security",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 25,
+      "talk_track": "As a prerequisite, the principals (IDs) need to be synched to the Account Console (once for all Workspaces!). From there access to Workspaces can be assigned to suers and groups. With Unity Catalog there is just one way to securely access cloud storage: The cluster will check the access permissions ...",
+      "section": "Data access"
+    },
+    {
+      "slide": 51,
+      "title": "Life of a query with Unity Catalog",
+      "kind": "diagram",
+      "tags": [
+        "L200"
+      ],
+      "shape_count": 26,
+      "subtitle": "(S3, ADLS)",
+      "talk_track": "Let’s dive deeper into how Table ACLs work without Unity Catalog: A client send a SQL, Python, R or Scala based query to the cluster or SQL Warehouse The cluster checks the metadata and grants with Unity Catalog If access is permitted, Unity Catalog (and not the cluster!) assumes the IAM role (AWS) ...",
+      "section": "Data access"
+    },
+    {
+      "slide": 52,
+      "title": "Life of a query with Unity Catalog",
+      "kind": "diagram",
+      "tags": [
+        "L200"
+      ],
+      "shape_count": 28,
+      "subtitle": "(S3, ADLS)",
+      "talk_track": "Let’s dive deeper into how Table ACLs work without Unity Catalog: A client send a SQL, Python, R or Scala based query to the cluster or SQL Warehouse The cluster checks the metadata and grants with Unity Catalog If access is permitted, Unity Catalog (and not the cluster!) assumes the IAM role (AWS) ...",
+      "section": "Data access"
+    },
+    {
+      "slide": 53,
+      "title": "Querying database sources with Unity",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 39,
+      "subtitle": "(Snowflake, SQL Server, Postgres, Mysql, etc)",
+      "talk_track": "Let me run you through the life of a query with Unity Catalog A user submits a query or action, this can be any query/action on any language, Python, R, Scala, SQL. Unity Catalog works across all languages. This query hits an warehouse or cluster, this can be a standard, user isolation or multi user...",
+      "section": "Data access"
+    },
+    {
+      "slide": 54,
+      "title": "Delta & Iceberg",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 55,
+      "title": "Data Formats - Parquet",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 6,
+      "subtitle": "‹#›",
+      "talk_track": "To understand the most important benefits of Delta, it helps to look at some issues around the well known format Parquet: The small file problem: Over time when more and more data has been appended to a parquet file, it can happen that it contains lots of small files (in the MBs or even KBs). For sm...",
+      "section": "Delta & Iceberg"
+    },
+    {
+      "slide": 56,
+      "title": "Delta: Reliability and performance features",
+      "kind": "diagram",
+      "tags": [
+        "overview",
+        "L100-200"
+      ],
+      "shape_count": 6,
+      "subtitle": "‹#›",
+      "talk_track": "Delta addresses many issues known in Big Data file formats like parquet: It uses the Parquet file format for the payload and adds a transaction log to it. This transaction log enables (amongst other things) four main features: Consistency: Write tasks and streaming tasks can be used with reading tas...",
+      "section": "Delta & Iceberg"
+    },
+    {
+      "slide": 57,
+      "title": "Reading and writing Iceberg and Delta",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 83,
+      "subtitle": "Unity Catalog",
+      "section": "Delta & Iceberg"
+    },
+    {
+      "slide": 58,
+      "title": "Lakehouse Monitoring and Observability",
+      "kind": "section",
+      "tags": [],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 59,
+      "title": "Lakehouse Observability",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 58,
+      "subtitle": "UC Metastore",
+      "section": "Lakehouse Monitoring and Observability"
+    },
+    {
+      "slide": 60,
+      "title": "Lakehouse Monitoring",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 59,
+      "subtitle": "Open monitoring for tables and models",
+      "section": "Lakehouse Monitoring and Observability"
+    },
+    {
+      "slide": 61,
+      "title": "Filesystems in Databricks",
+      "kind": "section",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 62,
+      "title": "DBFS (Databricks File System)",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 26,
+      "subtitle": "‹#›",
+      "section": "Filesystems in Databricks"
+    },
+    {
+      "slide": 63,
+      "title": "Filesystems in Databricks",
+      "kind": "diagram",
+      "tags": [
+        "overview"
+      ],
+      "shape_count": 20,
+      "talk_track": "Video to explain this slide: https://drive.google.com/drive/folders/1leUtebmO45Ut28nuRoiO-Zj_8O2PAwcB Note: With Unity Catalog DBFS mounts will be deprecated In general, mounts are not recommended, since they have some side effects Do not store production data in DBFS",
+      "section": "Filesystems in Databricks"
+    },
+    {
+      "slide": 64,
+      "title": "Reference  Architecture",
+      "kind": "section",
+      "tags": [
+        "overview",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "shape_count": 2,
+      "subtitle": "‹#›"
+    },
+    {
+      "slide": 65,
+      "title": "Databricks Data Intelligence Platform",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 133,
+      "subtitle": "Data Science, AI / ML and GenAI Apps - Mosaic AI",
+      "talk_track": "The reference architecture is structured along the dimensions “Source”, “Ingest”, “Transform”, “Query and Process”, “Serve”, “Analyse”, “Storage” and “Integration” It maps capabilities into domains like “Batch & Streaming”, “Processing, ETL, Real-time Analysis”, “Data Warehousing”, “Data Science & G...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 66,
+      "title": "1 Built in ingestion from SaaS and databases",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 99,
+      "talk_track": "Databricks Lakeflow Connect offers built-in connectors for ingestion from enterprise applications and databases. The resulting ingestion pipeline is governed by Unity Catalog and is powered by serverless compute and Lakeflow Declarative Pipelines. Lakeflow Connect leverages efficient incremental rea...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 67,
+      "title": "2 Batch ingestion and ETL",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 119,
+      "subtitle": "‹#›",
+      "talk_track": "Ingestion tools use source-specific adapters to read data from the source and then either store it in the cloud storage from where Auto Loader can read it, or call Databricks directly (for example, with partner ingestion tools integrated into the Databricks lakehouse). To load the data, the Databric...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 68,
+      "title": "3 Streaming and Change Data Capture",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 123,
+      "subtitle": "‹#›",
+      "talk_track": "The Databricks ETL engine Spark Structured Streaming to read from event queues such as Apache Kafka or AWS Kinesis. The downstream steps follow the approach of the Batch use case above. Real-time change data capture (CDC) typically uses an event queue to store the extracted events. From there, the u...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 69,
+      "title": "4 Machine Learning (traditional)",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 139,
+      "talk_track": "For machine learning, the Databricks Data Intelligence Platform provides Mosaic AI, which comes with state-of-the-art machine and deep learning libraries. It provides capabilities such as Feature Store and Model Registry (both integrated into Unity Catalog), low-code features with AutoML, and MLflow...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 70,
+      "title": "5 Gen AI: Agents",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 151,
+      "talk_track": "For machine learning, the Databricks Data Intelligence Platform provides Mosaic AI, which comes with state-of-the-art machine and deep learning libraries. It provides capabilities such as Feature Store and Model Registry (both integrated into Unity Catalog), low-code features with AutoML, and MLflow...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 71,
+      "title": "6 Business Intelligence",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 109,
+      "talk_track": "For BI use cases, business analysts can use dashboards, the Databricks SQL editor or BI tools such as Tableau or Amazon QuickSight. In all cases, the engine is Databricks SQL (serverless or non-serverless), and Unity Catalog provides data discovery, exploration, lineage, and access control.",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 72,
+      "title": "7 Business Apps",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 110,
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 73,
+      "title": "8 Lakehouse Federation",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 87,
+      "subtitle": "‹#›",
+      "talk_track": "Lakehouse Federation allows external data SQL databases (such as MySQL, Postgres, or Redshift) to be integrated with Databricks. All workloads (AI, DWH, and BI) can benefit from this without the need to ETL the data into object storage first. The external source catalog is mapped into the Unity cata...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 74,
+      "title": "9 Catalog Federation",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 89,
+      "talk_track": "Catalog federation allows external Hive Metastores (such as MySQL, Postgres, or Redshift) or Amazon Glue to be integrated with Databricks. All workloads (AI, DWH, and BI) can benefit from this without the need to ETL the data into object storage first. The external source catalog is added to Unity C...",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 75,
+      "title": "10a Sharing Data",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 94,
+      "talk_track": "Enterprise-grade data sharing with 3rd parties is provided by Delta Sharing. It enables direct access to data in the object store secured by Unity Catalog. This capability is also used in the Databricks Marketplace, an open forum for exchanging data products.",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 76,
+      "title": "10b Consuming Shared Data",
+      "kind": "diagram",
+      "tags": [],
+      "shape_count": 90,
+      "subtitle": "‹#›",
+      "talk_track": "The Delta Sharing Databricks-to-Databricks protocol allows to share data securely with any Databricks user, regardless of account or cloud host, as long as that user has access to a workspace enabled for Unity Catalog.",
+      "section": "Reference  Architecture"
+    },
+    {
+      "slide": 77,
+      "title": "APPENDIX",
+      "kind": "section",
+      "tags": [],
+      "shape_count": 1
+    },
+    {
+      "slide": 78,
+      "title": "Communication with DBFS",
+      "kind": "diagram",
+      "tags": [
+        "azure"
+      ],
+      "shape_count": 34,
+      "subtitle": "Compute Plane \u000b(Customer VNet)",
+      "section": "APPENDIX"
+    }
+  ]
+}

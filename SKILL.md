@@ -274,9 +274,15 @@ See "Designing the Presentation" above for how to choose between these.
 | `callout` | Bold statement (dark) | text, source? |
 | `logos` | Logo/partner display | title, subtitle?, logos: [strings] |
 
+### Architecture Diagrams (Imported)
+
+| Type | Description | Schema |
+|------|-------------|--------|
+| `architecture` | Pre-built architecture diagram from catalog | catalog_slide (1-based slide number), notes? |
+
 **Schema notation:** `field?` = optional, `[strings]` = string array, `[{a, b}]` = object array, `bool` = true/false
 
-**Total: 25 slide types**
+**Total: 26 slide types**
 
 ## Template & Branding
 
@@ -286,6 +292,183 @@ The generator uses the official Databricks corporate template. Branding, backgro
 - **Light backgrounds**: All other content slides use light templates for readability
 
 All slides automatically include proper footer, branding, and visual consistency.
+
+## Architecture Diagram Catalog
+
+A catalog of 55 pre-built Databricks architecture diagrams is available for import into generated decks. Use these for technical audiences (L200+) when discussing platform components, deployment models, security, or data architecture.
+
+### When to Use
+
+- Technical deep-dives with SAs, architects, or engineering teams
+- Platform component discussions (compute, security, data access)
+- Reference architecture walkthroughs
+- Any deck at L200+ depth that benefits from official architecture visuals
+
+### JSON Format
+
+```json
+{"type": "architecture", "catalog_slide": 14, "notes": "Optional custom speaker notes"}
+```
+
+- `catalog_slide` (required): 1-based slide number from the catalog (see index below)
+- `notes` (optional): Custom speaker notes. If omitted, the catalog's built-in talk track is used.
+
+### Usage Guidelines
+
+- Architecture slides are imported as-is with all shapes, images, and formatting preserved
+- They use a white background and do not carry over the catalog's slide master
+- Mix freely with other slide types — they work alongside generated slides
+- Multiple architecture slides can reference the same catalog slide
+- Section header slides from the catalog (kind=section) can also be imported, but prefer using the native `section` slide type for visual consistency
+
+### Catalog Index
+
+Organized by topic section. Slides marked with shape counts to indicate complexity.
+
+**Data Intelligence Platform**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 6 | Modern Data Platform - Framework | 26 | overview, L100-200 |
+| 7 | Databricks "Data Intelligence Platform" | 42 | overview, L100-200 |
+
+**Databricks AI**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 9 | Mosaic AI (overview) | 16 | overview, L100-200 |
+| 10 | Mosaic AI (detailed) | 59 | L200 |
+
+**Lakehouse & Data Intelligence Platform**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 12 | From Lakehouse to Data Intelligence Platform | 21 | overview, L100-200 |
+
+**High Level Architecture**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 14 | Data Intelligence Platform Overview | 61 | overview, L100-200 |
+| 15 | Data Intelligence Platform Classic | 63 | overview, L100-200 |
+| 16 | Data Intelligence Platform Serverless | 65 | overview, L100-200 |
+| 17 | Data Intelligence Platform Serverless (storage) | 66 | overview, L100-200 |
+
+**Classic Compute**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 19 | High Level Architecture | 23 | overview, L100-200 |
+| 20 | Detailed High Level Architecture | 46 | overview |
+
+**SQL Warehouse**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 22 | High Level Architecture | 26 | overview, L100-200 |
+| 23 | Detailed High Level Architecture | 53 | overview |
+
+**Serverless Compute**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 25 | High Level Architecture | 39 | overview, L100-200 |
+| 26 | High Level Architecture (SQL) | 34 | overview, L100-200 |
+| 27 | High Level Architecture - Details | 33 | overview |
+
+**Serverless Model Serving, Vector Search, Online Tables**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 29 | High Level Architecture | 48 | overview, L100-200 |
+
+**Online Transaction Processing**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 31 | High Level Architecture | 37 | — |
+| 32 | Lakebase integration | 58 | — |
+
+**Security**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 34 | Security Highlights | 36 | overview |
+| 35 | Secure Cluster Communication | 62 | overview |
+| 36 | Private Link | 33 | overview |
+| 37 | Customer Managed Keys | 29 | overview |
+| 38 | Lakebase security highlights | 29 | — |
+
+**Scaling Databricks**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 40 | Scaling Databricks Compute | 21 | overview |
+| 41 | Multi Workspace Architecture | 43 | overview |
+
+**Data Architecture**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 44 | Medallion, the best practice pipeline | 31 | overview, L100-200 |
+| 45 | Data Modeling: Dimensional Modeling for DWHs | 47 | overview |
+| 46 | Data Modeling: Modern use cases (ML and AI) | 28 | overview |
+| 47 | Enhanced medallion architecture | 30 | overview |
+
+**Data Access**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 49 | High Level Data Access from Databricks | 29 | overview, L100-200 |
+| 50 | Data Access Security | 25 | overview |
+| 51 | Life of a query with Unity Catalog | 26 | L200 |
+| 52 | Life of a query with Unity Catalog (detailed) | 28 | L200 |
+| 53 | Querying database sources with Unity | 39 | — |
+
+**Delta & Iceberg**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 55 | Data Formats - Parquet | 6 | overview |
+| 56 | Delta: Reliability and performance features | 6 | overview, L100-200 |
+| 57 | Reading and writing Iceberg and Delta | 83 | — |
+
+**Lakehouse Monitoring and Observability**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 59 | Lakehouse Observability | 58 | — |
+| 60 | Lakehouse Monitoring | 59 | — |
+
+**Filesystems in Databricks**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 62 | DBFS (Databricks File System) | 26 | overview |
+| 63 | Filesystems in Databricks | 20 | overview |
+
+**Reference Architecture**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 65 | Databricks Data Intelligence Platform (full reference) | 133 | — |
+| 66 | 1 Built in ingestion from SaaS and databases | 99 | — |
+| 67 | 2 Batch ingestion and ETL | 119 | — |
+| 68 | 3 Streaming and Change Data Capture | 123 | — |
+| 69 | 4 Machine Learning (traditional) | 139 | — |
+| 70 | 5 Gen AI: Agents | 151 | — |
+| 71 | 6 Business Intelligence | 109 | — |
+| 72 | 7 Business Apps | 110 | — |
+| 73 | 8 Lakehouse Federation | 87 | — |
+| 74 | 9 Catalog Federation | 89 | — |
+| 75 | 10a Sharing Data | 94 | — |
+| 76 | 10b Consuming Shared Data | 90 | — |
+
+**Appendix**
+
+| Slide | Title | Shapes | Tags |
+|-------|-------|--------|------|
+| 78 | Communication with DBFS | 34 | azure |
 
 ## Content Best Practices
 
