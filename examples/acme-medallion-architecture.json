@@ -1,0 +1,223 @@
+{
+  "title": "Acme Corp — Medallion Target State Architecture",
+  "author": "Databricks",
+  "date": "February 2026",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Acme Corp\nMedallion Target State Architecture",
+      "subtitle": "Unifying SQL Server and Salesforce on the Databricks Lakehouse",
+      "author": "Databricks",
+      "date": "February 2026"
+    },
+    {
+      "type": "section",
+      "title": "Current State"
+    },
+    {
+      "type": "two-column-icons",
+      "title": "Two Source Systems, One Platform",
+      "subtitle": "Acme's data landscape today consists of two primary sources feeding downstream analytics",
+      "columns": [
+        {
+          "header": "SQL Server (ERP)",
+          "icon": "rdbms",
+          "items": [
+            "Core transactional database for orders, inventory, and financials",
+            "Batch extracts via nightly ETL jobs",
+            "~50 tables, 200 GB total volume",
+            "Change tracking enabled for incremental loads"
+          ]
+        },
+        {
+          "header": "Salesforce (CRM)",
+          "icon": "salesforce",
+          "items": [
+            "Customer accounts, opportunities, and pipeline data",
+            "Currently extracted via third-party tool into CSVs",
+            "~30 objects, updated throughout the day",
+            "No unified view with ERP data today"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "title": "Challenges with the Current Approach",
+      "bullets": [
+        "Siloed data — no single source of truth across sales and operations",
+        "Stale data — nightly batch loads mean dashboards are always a day behind",
+        "No data quality enforcement — errors propagate into reports undetected",
+        "Manual CSV pipeline for Salesforce is fragile and hard to monitor",
+        "No lineage or governance — compliance team lacks audit trail"
+      ],
+      "notes": "These pain points are what the medallion architecture on Databricks directly addresses."
+    },
+    {
+      "type": "section",
+      "title": "Target State Architecture"
+    },
+    {
+      "type": "architecture",
+      "catalog_slide": 44,
+      "title": "Acme Corp — Medallion Architecture",
+      "notes": "The medallion architecture gives Acme three clear layers: Bronze lands raw data as-is from SQL Server and Salesforce. Silver cleanses, conforms, and joins the two sources. Gold produces business-ready tables optimized for reporting and ML."
+    },
+    {
+      "type": "three-column-icons",
+      "title": "Medallion Layers for Acme",
+      "subtitle": "Each layer serves a distinct purpose in the data lifecycle",
+      "columns": [
+        {
+          "header": "Bronze (Raw)",
+          "icon": "ingestion",
+          "items": [
+            "Land SQL Server tables via Lakeflow Connect (CDC)",
+            "Ingest Salesforce objects via Lakeflow Connect (SaaS connector)",
+            "Preserve source schema as-is",
+            "Append load metadata (timestamp, source, batch ID)"
+          ]
+        },
+        {
+          "header": "Silver (Curated)",
+          "icon": "curated",
+          "items": [
+            "Cleanse and deduplicate records",
+            "Apply PII masking on customer fields",
+            "Conform data types across sources",
+            "Join orders (SQL Server) with accounts (Salesforce)"
+          ]
+        },
+        {
+          "header": "Gold (Business)",
+          "icon": "delta-lake",
+          "items": [
+            "Customer 360 table (unified CRM + ERP view)",
+            "Revenue analytics (pipeline-to-close metrics)",
+            "Inventory health dashboard tables",
+            "Optimized star schema for BI tools"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "architecture",
+      "catalog_slide": 66,
+      "title": "Acme Corp — Ingestion with Lakeflow Connect",
+      "notes": "Lakeflow Connect provides native connectors for both SQL Server (JDBC/CDC) and Salesforce (SaaS connector). Both pipelines are governed by Unity Catalog and run on serverless compute. This replaces Acme's current nightly batch ETL and manual CSV exports with managed, incremental ingestion.",
+      "modifications": {
+        "text_replacements": [
+          {"find": "RDBMS", "replace": "SQL Server", "match_index": 0},
+          {"find": "SaaS", "replace": "Salesforce", "match_index": 1}
+        ],
+        "remove_shapes": [
+          {"text": "Files / Logs"},
+          {"text": "Sensors and IoT"},
+          {"text": "RDBMS / DWH"},
+          {"text": "Business Apps"},
+          {"text": "Media"},
+          {"text": "HMS*"},
+          {"text": "DWH"},
+          {"text": "Data Shares"},
+          {"text": "Marketplaces"},
+          {"text": "Hive Metastore"}
+        ]
+      }
+    },
+    {
+      "type": "architecture",
+      "catalog_slide": 71,
+      "title": "Acme Corp — Business Intelligence",
+      "notes": "Once data flows through the medallion layers into Gold tables, Acme's analysts can use Databricks SQL Warehouses for ad-hoc queries, AI/BI Dashboards for self-service reporting, and Genie for natural-language questions. Unity Catalog provides row-level security and column masking for PII compliance.",
+      "modifications": {
+        "text_replacements": [
+          {"find": "RDBMS", "replace": "SQL Server", "match_index": 0},
+          {"find": "SaaS", "replace": "Salesforce"},
+          {"find": "BI Tool", "replace": "Tableau"}
+        ],
+        "remove_shapes": [
+          {"text": "Files / Logs"},
+          {"text": "Sensors and IoT"},
+          {"text": "RDBMS / DWH"},
+          {"text": "Business Apps"},
+          {"text": "Media"},
+          {"text": "HMS*"},
+          {"text": "DWH"},
+          {"text": "Data Shares"},
+          {"text": "Marketplaces"},
+          {"text": "Hive Metastore"}
+        ]
+      }
+    },
+    {
+      "type": "section",
+      "title": "Governance & Quality"
+    },
+    {
+      "type": "icon-grid",
+      "title": "Built-in Governance with Unity Catalog",
+      "items": [
+        {
+          "icon": "🔐",
+          "title": "Access Control",
+          "description": "Row-level and column-level security across all medallion layers"
+        },
+        {
+          "icon": "🔍",
+          "title": "Lineage Tracking",
+          "description": "End-to-end lineage from SQL Server / Salesforce through Bronze → Silver → Gold"
+        },
+        {
+          "icon": "📊",
+          "title": "Data Quality",
+          "description": "Expectations on Silver tables catch schema drift and null violations automatically"
+        },
+        {
+          "icon": "📋",
+          "title": "Audit Trail",
+          "description": "Full audit log of who accessed what data and when — ready for compliance review"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "title": "Implementation Plan"
+    },
+    {
+      "type": "timeline",
+      "title": "Rollout in Three Phases",
+      "steps": [
+        {
+          "title": "Phase 1: Foundation (Weeks 1–3)",
+          "description": "Stand up Unity Catalog, configure Lakeflow Connect for SQL Server and Salesforce, build Bronze layer with CDC pipelines"
+        },
+        {
+          "title": "Phase 2: Curation (Weeks 4–6)",
+          "description": "Build Silver layer with Declarative Pipelines, apply data quality expectations, join CRM and ERP data into conformed models"
+        },
+        {
+          "title": "Phase 3: Business Value (Weeks 7–9)",
+          "description": "Build Gold tables for Customer 360 and revenue analytics, deploy Databricks SQL dashboards, onboard analysts"
+        }
+      ]
+    },
+    {
+      "type": "stat-row",
+      "title": "Expected Outcomes",
+      "stats": [
+        {"value": "< 15 min", "label": "Data freshness (from 24 hrs)"},
+        {"value": "1", "label": "Unified Customer 360 view"},
+        {"value": "100%", "label": "Lineage & audit coverage"},
+        {"value": "3x", "label": "Faster time-to-insight"}
+      ]
+    },
+    {
+      "type": "callout",
+      "text": "One platform. Two sources. Complete visibility from ingestion to insight."
+    },
+    {
+      "type": "closing",
+      "title": "Thank You"
+    }
+  ]
+}

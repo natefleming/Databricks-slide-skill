@@ -1,0 +1,2402 @@
+{
+  "source": "system_architecture_catalog.pptx",
+  "icon_count": 121,
+  "icons": {
+    "3p-data-platform": {
+      "file": "3p-data-platform.png",
+      "description": "Third-party data platform connector icon",
+      "category": "integration",
+      "keywords": [
+        "third party",
+        "connector",
+        "external",
+        "data platform"
+      ],
+      "width": 0.45,
+      "height": 0.45,
+      "content_type": "image/png",
+      "source_slides": [
+        57,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "account-console": {
+      "file": "account-console.png",
+      "description": "Databricks account console icon",
+      "category": "databricks",
+      "keywords": [
+        "account",
+        "console",
+        "admin",
+        "management"
+      ],
+      "width": 0.27,
+      "height": 0.25,
+      "content_type": "image/png",
+      "source_slides": [
+        19,
+        20,
+        22,
+        23,
+        25,
+        26,
+        27,
+        29,
+        31,
+        32,
+        34,
+        35,
+        36,
+        37,
+        38,
+        41,
+        49,
+        63
+      ]
+    },
+    "admin": {
+      "file": "admin.png",
+      "description": "Administrator/admin user icon",
+      "category": "user-access",
+      "keywords": [
+        "admin",
+        "administrator",
+        "management",
+        "user"
+      ],
+      "width": 0.67,
+      "height": 0.67,
+      "content_type": "image/png",
+      "source_slides": [
+        51,
+        52,
+        53
+      ]
+    },
+    "ai-models-tools": {
+      "file": "ai-models-tools.png",
+      "description": "Databricks AI models and tools icon",
+      "category": "ai-ml",
+      "keywords": [
+        "ai",
+        "models",
+        "tools",
+        "machine learning",
+        "mosaic"
+      ],
+      "width": 0.41,
+      "height": 0.42,
+      "content_type": "image/png",
+      "source_slides": [
+        10,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "amazon-s3": {
+      "file": "amazon-s3.png",
+      "description": "Amazon S3 logo (small, from overview slide)",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "s3",
+        "storage",
+        "amazon",
+        "object storage"
+      ],
+      "width": 0.2,
+      "height": 0.2,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "anthropic": {
+      "file": "anthropic.png",
+      "description": "Anthropic AI company logo",
+      "category": "ai-ml",
+      "keywords": [
+        "anthropic",
+        "claude",
+        "ai",
+        "llm",
+        "foundation model"
+      ],
+      "width": 0.24,
+      "height": 0.24,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "apache-spark": {
+      "file": "apache-spark.png",
+      "description": "Apache Spark logo with text",
+      "category": "data-platform",
+      "keywords": [
+        "spark",
+        "apache",
+        "distributed",
+        "processing",
+        "engine"
+      ],
+      "width": 0.59,
+      "height": 0.31,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "apache-spark-logo": {
+      "file": "apache-spark-logo.png",
+      "description": "Apache Spark logo (small, horizontal)",
+      "category": "data-platform",
+      "keywords": [
+        "spark",
+        "apache",
+        "logo",
+        "distributed",
+        "processing"
+      ],
+      "width": 0.58,
+      "height": 0.3,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "apache-spark-logo-large": {
+      "file": "apache-spark-logo-large.png",
+      "description": "Apache Spark logo (large, horizontal)",
+      "category": "data-platform",
+      "keywords": [
+        "spark",
+        "apache",
+        "logo",
+        "distributed",
+        "processing"
+      ],
+      "width": 0.42,
+      "height": 0.22,
+      "content_type": "image/png",
+      "source_slides": [
+        20,
+        40,
+        50
+      ]
+    },
+    "apps": {
+      "file": "apps.png",
+      "description": "Databricks Apps icon",
+      "category": "databricks",
+      "keywords": [
+        "apps",
+        "applications",
+        "databricks apps",
+        "web apps"
+      ],
+      "width": 0.56,
+      "height": 0.56,
+      "content_type": "image/png",
+      "source_slides": [
+        14,
+        15,
+        16,
+        17,
+        31,
+        32,
+        38,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "athena": {
+      "file": "athena.png",
+      "description": "Amazon Athena query service logo",
+      "category": "aws",
+      "keywords": [
+        "athena",
+        "aws",
+        "query",
+        "serverless",
+        "sql"
+      ],
+      "width": 0.5,
+      "height": 0.5,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "audit-log": {
+      "file": "audit-log.png",
+      "description": "Audit log / compliance icon",
+      "category": "security",
+      "keywords": [
+        "audit",
+        "log",
+        "compliance",
+        "tracking",
+        "monitoring"
+      ],
+      "width": 0.64,
+      "height": 0.64,
+      "content_type": "image/png",
+      "source_slides": [
+        51,
+        52,
+        53
+      ]
+    },
+    "aws-dynamodb": {
+      "file": "aws-dynamodb.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon DynamoDB NoSQL database logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "dynamodb",
+        "nosql",
+        "database",
+        "key-value"
+      ]
+    },
+    "aws-emr": {
+      "file": "aws-emr.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon EMR (Elastic MapReduce) logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "emr",
+        "mapreduce",
+        "hadoop",
+        "spark",
+        "cluster"
+      ]
+    },
+    "aws-eventbridge": {
+      "file": "aws-eventbridge.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon EventBridge serverless event bus logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "eventbridge",
+        "event",
+        "serverless",
+        "bus"
+      ]
+    },
+    "aws-glue": {
+      "file": "aws-glue.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "AWS Glue ETL service logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "glue",
+        "etl",
+        "catalog",
+        "crawl",
+        "transform"
+      ]
+    },
+    "aws-iot-core": {
+      "file": "aws-iot-core.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "AWS IoT Core logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "iot",
+        "internet of things",
+        "devices",
+        "mqtt"
+      ]
+    },
+    "aws-kinesis": {
+      "file": "aws-kinesis.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon Kinesis real-time streaming logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "kinesis",
+        "streaming",
+        "real-time",
+        "data stream"
+      ]
+    },
+    "aws-lambda": {
+      "file": "aws-lambda.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "AWS Lambda serverless compute logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "lambda",
+        "serverless",
+        "function",
+        "compute"
+      ]
+    },
+    "aws-rds": {
+      "file": "aws-rds.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon RDS relational database logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "rds",
+        "relational",
+        "database",
+        "managed"
+      ]
+    },
+    "aws-redshift": {
+      "file": "aws-redshift.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon Redshift data warehouse logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "redshift",
+        "data warehouse",
+        "analytics",
+        "sql"
+      ]
+    },
+    "aws-s3": {
+      "file": "aws-s3.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon S3 object storage logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "s3",
+        "storage",
+        "object storage",
+        "bucket"
+      ]
+    },
+    "aws-sagemaker": {
+      "file": "aws-sagemaker.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Amazon SageMaker ML platform logo",
+      "category": "aws",
+      "keywords": [
+        "aws",
+        "sagemaker",
+        "machine learning",
+        "ml",
+        "training"
+      ]
+    },
+    "azure-active-directory": {
+      "file": "azure-active-directory.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Active Directory (Entra ID) logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "active directory",
+        "entra",
+        "identity",
+        "auth"
+      ]
+    },
+    "azure-cosmos-db": {
+      "file": "azure-cosmos-db.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Cosmos DB multi-model database logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "cosmos",
+        "nosql",
+        "database",
+        "global"
+      ]
+    },
+    "azure-data-factory": {
+      "file": "azure-data-factory.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Data Factory ETL/ELT service logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "data factory",
+        "etl",
+        "pipeline",
+        "orchestration"
+      ]
+    },
+    "azure-data-lake-storage": {
+      "file": "azure-data-lake-storage.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Data Lake Storage Gen2 logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "adls",
+        "data lake",
+        "storage",
+        "gen2"
+      ]
+    },
+    "azure-event-hubs": {
+      "file": "azure-event-hubs.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Event Hubs streaming platform logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "event hubs",
+        "streaming",
+        "kafka",
+        "ingestion"
+      ]
+    },
+    "azure-functions": {
+      "file": "azure-functions.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Functions serverless compute logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "functions",
+        "serverless",
+        "compute",
+        "faas"
+      ]
+    },
+    "azure-iot-hub": {
+      "file": "azure-iot-hub.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure IoT Hub device management logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "iot",
+        "hub",
+        "devices",
+        "telemetry"
+      ]
+    },
+    "azure-sql-database": {
+      "file": "azure-sql-database.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure SQL Database managed service logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "sql",
+        "database",
+        "managed",
+        "relational"
+      ]
+    },
+    "azure-synapse": {
+      "file": "azure-synapse.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Azure Synapse Analytics logo",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "synapse",
+        "analytics",
+        "data warehouse",
+        "sql"
+      ]
+    },
+    "batch-and-streaming": {
+      "file": "batch-and-streaming.png",
+      "description": "Batch and streaming data processing icon",
+      "category": "databricks",
+      "keywords": [
+        "batch",
+        "streaming",
+        "etl",
+        "data processing",
+        "pipeline"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        68
+      ]
+    },
+    "bi": {
+      "file": "bi.png",
+      "description": "Business intelligence / BI tools icon",
+      "category": "databricks",
+      "keywords": [
+        "bi",
+        "business intelligence",
+        "dashboards",
+        "reporting",
+        "sql"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        71
+      ]
+    },
+    "classic-compute": {
+      "file": "classic-compute.png",
+      "description": "Databricks classic compute cluster icon",
+      "category": "compute",
+      "keywords": [
+        "classic",
+        "compute",
+        "cluster",
+        "all-purpose",
+        "jobs"
+      ],
+      "width": 0.69,
+      "height": 0.73,
+      "content_type": "image/png",
+      "source_slides": [
+        22,
+        34,
+        35,
+        36
+      ]
+    },
+    "cloud-cluster-green": {
+      "file": "cloud-cluster-green.png",
+      "description": "Cloud cluster icon (green/serverless style)",
+      "category": "compute",
+      "keywords": [
+        "cluster",
+        "serverless",
+        "cloud",
+        "green",
+        "compute"
+      ],
+      "width": 0.51,
+      "height": 0.51,
+      "content_type": "image/png",
+      "source_slides": [
+        26
+      ]
+    },
+    "cloud-cluster-orange": {
+      "file": "cloud-cluster-orange.png",
+      "description": "Cloud cluster icon (orange/classic style)",
+      "category": "compute",
+      "keywords": [
+        "cluster",
+        "classic",
+        "cloud",
+        "orange",
+        "compute"
+      ],
+      "width": 0.51,
+      "height": 0.51,
+      "content_type": "image/png",
+      "source_slides": [
+        26
+      ]
+    },
+    "cloud-database": {
+      "file": "cloud-database.png",
+      "description": "Cloud database icon (small, used in reference architectures)",
+      "category": "storage",
+      "keywords": [
+        "cloud",
+        "database",
+        "storage",
+        "cloud database"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        74,
+        75
+      ]
+    },
+    "cloud-database-large": {
+      "file": "cloud-database-large.png",
+      "description": "Cloud database icon (large)",
+      "category": "storage",
+      "keywords": [
+        "cloud",
+        "database",
+        "storage",
+        "cloud database"
+      ],
+      "width": 0.57,
+      "height": 0.57,
+      "content_type": "image/png",
+      "source_slides": [
+        51,
+        52
+      ]
+    },
+    "cloud-network": {
+      "file": "cloud-network.png",
+      "description": "Cloud network topology icon",
+      "category": "generic",
+      "keywords": [
+        "cloud",
+        "network",
+        "topology",
+        "infrastructure",
+        "nodes"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        75,
+        76
+      ]
+    },
+    "cluster": {
+      "file": "cluster.png",
+      "description": "Databricks cluster icon",
+      "category": "compute",
+      "keywords": [
+        "cluster",
+        "compute",
+        "nodes",
+        "spark",
+        "workers"
+      ],
+      "width": 0.67,
+      "height": 0.67,
+      "content_type": "image/png",
+      "source_slides": [
+        19,
+        25,
+        34,
+        35,
+        36
+      ]
+    },
+    "cluster-disks": {
+      "file": "cluster-disks.png",
+      "description": "Cluster with attached disks icon",
+      "category": "compute",
+      "keywords": [
+        "cluster",
+        "disks",
+        "storage",
+        "local",
+        "ssd"
+      ],
+      "width": 0.63,
+      "height": 0.63,
+      "content_type": "image/png",
+      "source_slides": [
+        37
+      ]
+    },
+    "cluster-or-sql-warehouse": {
+      "file": "cluster-or-sql-warehouse.png",
+      "description": "Cluster or SQL warehouse icon (generic compute)",
+      "category": "compute",
+      "keywords": [
+        "cluster",
+        "sql warehouse",
+        "compute",
+        "endpoint"
+      ],
+      "width": 0.64,
+      "height": 0.61,
+      "content_type": "image/png",
+      "source_slides": [
+        51,
+        52,
+        53
+      ]
+    },
+    "compute": {
+      "file": "compute.png",
+      "description": "Databricks compute layer icon",
+      "category": "compute",
+      "keywords": [
+        "compute",
+        "processing",
+        "layer",
+        "databricks"
+      ],
+      "width": 0.56,
+      "height": 0.56,
+      "content_type": "image/png",
+      "source_slides": [
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    "control-plane": {
+      "file": "control-plane.png",
+      "description": "Databricks control plane icon",
+      "category": "databricks",
+      "keywords": [
+        "control plane",
+        "management",
+        "orchestration",
+        "api"
+      ],
+      "width": 0.63,
+      "height": 0.7,
+      "content_type": "image/png",
+      "source_slides": [
+        37
+      ]
+    },
+    "curated": {
+      "file": "curated.png",
+      "description": "Curated/gold data layer icon (medallion architecture)",
+      "category": "databricks",
+      "keywords": [
+        "curated",
+        "gold",
+        "medallion",
+        "data quality",
+        "refined"
+      ],
+      "width": 1.03,
+      "height": 1.03,
+      "content_type": "image/png",
+      "source_slides": [
+        44
+      ]
+    },
+    "data-shares": {
+      "file": "data-shares.png",
+      "description": "Data sharing / Delta Sharing icon",
+      "category": "databricks",
+      "keywords": [
+        "data sharing",
+        "delta sharing",
+        "share",
+        "external"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75
+      ]
+    },
+    "database": {
+      "file": "database.png",
+      "description": "Generic database cylinder icon (small)",
+      "category": "storage",
+      "keywords": [
+        "database",
+        "cylinder",
+        "storage",
+        "relational"
+      ],
+      "width": 0.29,
+      "height": 0.23,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "database-cylinder": {
+      "file": "database-cylinder.png",
+      "description": "Database cylinder icon",
+      "category": "storage",
+      "keywords": [
+        "database",
+        "cylinder",
+        "dwh",
+        "data warehouse",
+        "storage"
+      ],
+      "width": 0.37,
+      "height": 0.3,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        75,
+        76
+      ]
+    },
+    "delta-lake": {
+      "file": "delta-lake.png",
+      "description": "Delta Lake logo mark (triangular icon)",
+      "category": "data-format",
+      "keywords": [
+        "delta lake",
+        "delta",
+        "lakehouse",
+        "table format",
+        "open source"
+      ],
+      "width": 0.36,
+      "height": 0.35,
+      "content_type": "image/png",
+      "source_slides": [
+        7,
+        32,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        75
+      ]
+    },
+    "delta-lake-logo": {
+      "file": "delta-lake-logo.png",
+      "description": "Delta Lake logo with text label",
+      "category": "data-format",
+      "keywords": [
+        "delta lake",
+        "delta",
+        "lakehouse",
+        "table format",
+        "logo"
+      ],
+      "width": 0.55,
+      "height": 0.43,
+      "content_type": "image/png",
+      "source_slides": [
+        25,
+        29,
+        44,
+        45,
+        46,
+        47,
+        59,
+        60
+      ]
+    },
+    "delta-sharing": {
+      "file": "delta-sharing.png",
+      "description": "Delta Sharing protocol logo",
+      "category": "databricks",
+      "keywords": [
+        "delta sharing",
+        "sharing",
+        "protocol",
+        "open",
+        "cross-platform"
+      ],
+      "width": 0.31,
+      "height": 0.26,
+      "content_type": "image/png",
+      "source_slides": [
+        7,
+        65,
+        75,
+        76
+      ]
+    },
+    "dremio": {
+      "file": "dremio.png",
+      "description": "Dremio data lakehouse platform logo",
+      "category": "data-platform",
+      "keywords": [
+        "dremio",
+        "lakehouse",
+        "query engine",
+        "data lake"
+      ],
+      "width": 0.44,
+      "height": 0.44,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "driver": {
+      "file": "driver.png",
+      "description": "Spark driver node icon",
+      "category": "compute",
+      "keywords": [
+        "driver",
+        "spark",
+        "node",
+        "master",
+        "coordinator"
+      ],
+      "width": 0.27,
+      "height": 0.27,
+      "content_type": "image/png",
+      "source_slides": [
+        40
+      ]
+    },
+    "emr": {
+      "file": "emr.png",
+      "description": "Amazon EMR logo (from architecture slide)",
+      "category": "aws",
+      "keywords": [
+        "emr",
+        "aws",
+        "elastic mapreduce",
+        "hadoop",
+        "spark"
+      ],
+      "width": 0.46,
+      "height": 0.47,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "enterprise-catalog": {
+      "file": "enterprise-catalog.png",
+      "description": "Enterprise catalog / data catalog icon",
+      "category": "databricks",
+      "keywords": [
+        "catalog",
+        "enterprise",
+        "metadata",
+        "governance",
+        "unity"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "external-orchestrator": {
+      "file": "external-orchestrator.png",
+      "description": "External orchestrator / workflow tool icon",
+      "category": "integration",
+      "keywords": [
+        "orchestrator",
+        "workflow",
+        "airflow",
+        "external",
+        "scheduler"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "fabric": {
+      "file": "fabric.png",
+      "description": "Microsoft Fabric analytics platform logo",
+      "category": "data-platform",
+      "keywords": [
+        "fabric",
+        "microsoft",
+        "analytics",
+        "data platform"
+      ],
+      "width": 0.31,
+      "height": 0.34,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "feature-enhanced": {
+      "file": "feature-enhanced.png",
+      "description": "Feature engineering / enhanced features icon",
+      "category": "ai-ml",
+      "keywords": [
+        "feature",
+        "engineering",
+        "enhanced",
+        "ml",
+        "transform"
+      ],
+      "width": 0.55,
+      "height": 0.55,
+      "content_type": "image/png",
+      "source_slides": [
+        44
+      ]
+    },
+    "feature-reduction": {
+      "file": "feature-reduction.png",
+      "description": "Feature reduction / dimensionality reduction icon",
+      "category": "ai-ml",
+      "keywords": [
+        "feature",
+        "reduction",
+        "dimensionality",
+        "ml",
+        "pca"
+      ],
+      "width": 0.64,
+      "height": 0.64,
+      "content_type": "image/png",
+      "source_slides": [
+        44
+      ]
+    },
+    "files-logs": {
+      "file": "files-logs.png",
+      "description": "Files and logs data source icon",
+      "category": "storage",
+      "keywords": [
+        "files",
+        "logs",
+        "data source",
+        "unstructured",
+        "raw"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "flink": {
+      "file": "flink.png",
+      "description": "Apache Flink stream processing logo",
+      "category": "data-platform",
+      "keywords": [
+        "flink",
+        "apache",
+        "streaming",
+        "processing",
+        "real-time"
+      ],
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "gcp-bigquery": {
+      "file": "gcp-bigquery.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google BigQuery serverless data warehouse logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "bigquery",
+        "data warehouse",
+        "analytics",
+        "sql"
+      ]
+    },
+    "gcp-cloud-functions": {
+      "file": "gcp-cloud-functions.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Cloud Functions serverless compute logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "cloud functions",
+        "serverless",
+        "faas",
+        "compute"
+      ]
+    },
+    "gcp-cloud-sql": {
+      "file": "gcp-cloud-sql.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Cloud SQL managed database logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "cloud sql",
+        "database",
+        "managed",
+        "relational"
+      ]
+    },
+    "gcp-cloud-storage": {
+      "file": "gcp-cloud-storage.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Cloud Storage object storage logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "cloud storage",
+        "gcs",
+        "object storage",
+        "bucket"
+      ]
+    },
+    "gcp-dataflow": {
+      "file": "gcp-dataflow.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Cloud Dataflow stream/batch processing logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "dataflow",
+        "streaming",
+        "batch",
+        "beam",
+        "processing"
+      ]
+    },
+    "gcp-dataproc": {
+      "file": "gcp-dataproc.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Cloud Dataproc managed Spark/Hadoop logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "dataproc",
+        "spark",
+        "hadoop",
+        "cluster",
+        "managed"
+      ]
+    },
+    "gcp-pub-sub": {
+      "file": "gcp-pub-sub.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Cloud Pub/Sub messaging service logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "pub/sub",
+        "messaging",
+        "event",
+        "streaming"
+      ]
+    },
+    "gcp-vertex-ai": {
+      "file": "gcp-vertex-ai.png",
+      "width": 0.4,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [],
+      "description": "Google Vertex AI ML platform logo",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "vertex",
+        "ai",
+        "machine learning",
+        "ml",
+        "training"
+      ]
+    },
+    "github-icon-1": {
+      "file": "github-icon-1.png",
+      "description": "GitHub-style icon (variant 1)",
+      "category": "integration",
+      "keywords": [
+        "github",
+        "git",
+        "devops",
+        "version control",
+        "ci-cd"
+      ],
+      "width": 0.27,
+      "height": 0.3,
+      "content_type": "image/png",
+      "source_slides": [
+        63
+      ]
+    },
+    "github-icon-2": {
+      "file": "github-icon-2.png",
+      "description": "GitHub-style icon (variant 2)",
+      "category": "integration",
+      "keywords": [
+        "github",
+        "git",
+        "devops",
+        "version control",
+        "ci-cd"
+      ],
+      "width": 0.27,
+      "height": 0.3,
+      "content_type": "image/png",
+      "source_slides": [
+        63
+      ]
+    },
+    "glue": {
+      "file": "glue.png",
+      "description": "AWS Glue ETL logo (from architecture slide)",
+      "category": "aws",
+      "keywords": [
+        "glue",
+        "aws",
+        "etl",
+        "catalog",
+        "transform"
+      ],
+      "width": 0.45,
+      "height": 0.45,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "google-cloud-storage": {
+      "file": "google-cloud-storage.png",
+      "description": "Google Cloud Storage logo (small, from overview slide)",
+      "category": "gcp",
+      "keywords": [
+        "gcp",
+        "gcs",
+        "cloud storage",
+        "google",
+        "object storage"
+      ],
+      "width": 0.25,
+      "height": 0.21,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "hms": {
+      "file": "hms.png",
+      "description": "Hive Metastore (HMS) icon",
+      "category": "data-platform",
+      "keywords": [
+        "hive",
+        "metastore",
+        "hms",
+        "catalog",
+        "schema"
+      ],
+      "width": 0.46,
+      "height": 0.41,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "huggingface": {
+      "file": "huggingface.png",
+      "description": "Hugging Face ML community logo",
+      "category": "ai-ml",
+      "keywords": [
+        "huggingface",
+        "hugging face",
+        "ml",
+        "models",
+        "transformers"
+      ],
+      "width": 0.45,
+      "height": 0.42,
+      "content_type": "image/png",
+      "source_slides": [
+        10
+      ]
+    },
+    "iceberg-logo": {
+      "file": "iceberg-logo.png",
+      "description": "Apache Iceberg logo with text",
+      "category": "data-format",
+      "keywords": [
+        "iceberg",
+        "apache",
+        "table format",
+        "open source",
+        "logo"
+      ],
+      "width": 0.22,
+      "height": 0.22,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "iceberg-mark": {
+      "file": "iceberg-mark.png",
+      "description": "Apache Iceberg logo mark (small, no text)",
+      "category": "data-format",
+      "keywords": [
+        "iceberg",
+        "apache",
+        "table format",
+        "open source",
+        "mark"
+      ],
+      "width": 0.19,
+      "height": 0.19,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        75
+      ]
+    },
+    "iceberg-rest": {
+      "file": "iceberg-rest.png",
+      "description": "Iceberg REST catalog icon",
+      "category": "data-format",
+      "keywords": [
+        "iceberg",
+        "rest",
+        "catalog",
+        "api",
+        "open"
+      ],
+      "width": 0.5,
+      "height": 0.38,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "id-provider": {
+      "file": "id-provider.png",
+      "description": "Identity provider / SSO icon",
+      "category": "security",
+      "keywords": [
+        "identity",
+        "provider",
+        "sso",
+        "auth",
+        "oauth",
+        "saml"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "ingest-tool": {
+      "file": "ingest-tool.png",
+      "description": "Data ingestion tool icon",
+      "category": "databricks",
+      "keywords": [
+        "ingest",
+        "ingestion",
+        "tool",
+        "lakeflow",
+        "autoloader"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        67
+      ]
+    },
+    "ingestion": {
+      "file": "ingestion.png",
+      "description": "Data ingestion pipeline icon (medallion architecture)",
+      "category": "databricks",
+      "keywords": [
+        "ingestion",
+        "pipeline",
+        "etl",
+        "raw",
+        "bronze"
+      ],
+      "width": 0.67,
+      "height": 0.67,
+      "content_type": "image/png",
+      "source_slides": [
+        44
+      ]
+    },
+    "jdbc-database": {
+      "file": "jdbc-database.png",
+      "description": "JDBC database connector icon",
+      "category": "integration",
+      "keywords": [
+        "jdbc",
+        "database",
+        "connector",
+        "driver",
+        "sql"
+      ],
+      "width": 0.42,
+      "height": 0.42,
+      "content_type": "image/png",
+      "source_slides": [
+        53
+      ]
+    },
+    "kafka": {
+      "file": "kafka.png",
+      "description": "Apache Kafka event streaming platform logo",
+      "category": "data-platform",
+      "keywords": [
+        "kafka",
+        "streaming",
+        "event",
+        "message queue",
+        "pub-sub"
+      ],
+      "width": 0.42,
+      "height": 0.42,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "key-management": {
+      "file": "key-management.png",
+      "description": "Key management / encryption keys icon",
+      "category": "security",
+      "keywords": [
+        "key management",
+        "encryption",
+        "kms",
+        "cmk",
+        "security"
+      ],
+      "width": 0.73,
+      "height": 0.73,
+      "content_type": "image/png",
+      "source_slides": [
+        37
+      ]
+    },
+    "key-small": {
+      "file": "key-small.png",
+      "description": "Key icon (small)",
+      "category": "security",
+      "keywords": [
+        "key",
+        "secret",
+        "credential",
+        "token",
+        "auth"
+      ],
+      "width": 0.34,
+      "height": 0.37,
+      "content_type": "image/png",
+      "source_slides": [
+        37
+      ]
+    },
+    "key-vault": {
+      "file": "key-vault.png",
+      "description": "Key vault / secrets manager icon (large)",
+      "category": "security",
+      "keywords": [
+        "key vault",
+        "secrets",
+        "credentials",
+        "security",
+        "vault"
+      ],
+      "width": 0.63,
+      "height": 0.7,
+      "content_type": "image/png",
+      "source_slides": [
+        37
+      ]
+    },
+    "lakeflowjobs": {
+      "file": "lakeflowjobs.png",
+      "description": "Databricks Lakeflow Jobs logo/text",
+      "category": "databricks",
+      "keywords": [
+        "lakeflow",
+        "jobs",
+        "orchestration",
+        "workflow",
+        "pipeline"
+      ],
+      "width": 0.68,
+      "height": 0.25,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "lakehouse": {
+      "file": "lakehouse.png",
+      "description": "Databricks Lakehouse icon",
+      "category": "databricks",
+      "keywords": [
+        "lakehouse",
+        "databricks",
+        "platform",
+        "unified",
+        "architecture"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        12,
+        14,
+        15,
+        16,
+        17,
+        57
+      ]
+    },
+    "langchain": {
+      "file": "langchain.jpg",
+      "description": "LangChain LLM framework logo",
+      "category": "ai-ml",
+      "keywords": [
+        "langchain",
+        "llm",
+        "framework",
+        "chain",
+        "agent",
+        "rag"
+      ],
+      "width": 0.43,
+      "height": 0.28,
+      "content_type": "image/jpeg",
+      "source_slides": [
+        10
+      ]
+    },
+    "managed-tables": {
+      "file": "managed-tables.png",
+      "description": "Managed tables icon (small)",
+      "category": "databricks",
+      "keywords": [
+        "managed",
+        "tables",
+        "unity catalog",
+        "governance"
+      ],
+      "width": 0.17,
+      "height": 0.17,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "marketplace": {
+      "file": "marketplace.png",
+      "description": "Databricks Marketplace icon (small)",
+      "category": "databricks",
+      "keywords": [
+        "marketplace",
+        "data",
+        "sharing",
+        "listings",
+        "exchange"
+      ],
+      "width": 0.25,
+      "height": 0.25,
+      "content_type": "image/png",
+      "source_slides": [
+        76
+      ]
+    },
+    "marketplaces": {
+      "file": "marketplaces.png",
+      "description": "Marketplaces / data exchange icon (reference arch)",
+      "category": "databricks",
+      "keywords": [
+        "marketplace",
+        "data exchange",
+        "sharing",
+        "listings"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75
+      ]
+    },
+    "media": {
+      "file": "media.png",
+      "description": "Media / unstructured content data source icon",
+      "category": "generic",
+      "keywords": [
+        "media",
+        "unstructured",
+        "images",
+        "video",
+        "content"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "microsoft-adls": {
+      "file": "microsoft-adls.png",
+      "description": "Microsoft Azure Data Lake Storage logo (small, overview)",
+      "category": "azure",
+      "keywords": [
+        "azure",
+        "adls",
+        "data lake",
+        "microsoft",
+        "storage"
+      ],
+      "width": 0.23,
+      "height": 0.22,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "mlflow": {
+      "file": "mlflow.png",
+      "description": "MLflow ML lifecycle management logo",
+      "category": "ai-ml",
+      "keywords": [
+        "mlflow",
+        "ml",
+        "experiment",
+        "tracking",
+        "model registry"
+      ],
+      "width": 0.28,
+      "height": 0.31,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "notebooks": {
+      "file": "notebooks.png",
+      "description": "Databricks notebooks icon",
+      "category": "databricks",
+      "keywords": [
+        "notebook",
+        "notebooks",
+        "code",
+        "interactive",
+        "ide"
+      ],
+      "width": 0.63,
+      "height": 0.7,
+      "content_type": "image/png",
+      "source_slides": [
+        37
+      ]
+    },
+    "online-tables": {
+      "file": "online-tables.png",
+      "description": "Databricks online tables icon (for model serving)",
+      "category": "databricks",
+      "keywords": [
+        "online tables",
+        "serving",
+        "feature store",
+        "low latency"
+      ],
+      "width": 0.43,
+      "height": 0.43,
+      "content_type": "image/png",
+      "source_slides": [
+        29
+      ]
+    },
+    "parquet": {
+      "file": "parquet.png",
+      "description": "Apache Parquet columnar format logo",
+      "category": "data-format",
+      "keywords": [
+        "parquet",
+        "columnar",
+        "format",
+        "apache",
+        "file format"
+      ],
+      "width": 0.26,
+      "height": 0.2,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "photon-1": {
+      "file": "photon-1.png",
+      "description": "Databricks Photon engine icon",
+      "category": "databricks",
+      "keywords": [
+        "photon",
+        "engine",
+        "vectorized",
+        "c++",
+        "performance"
+      ],
+      "width": 0.31,
+      "height": 0.32,
+      "content_type": "image/png",
+      "source_slides": [
+        7,
+        20,
+        23,
+        27
+      ]
+    },
+    "pyiceberg": {
+      "file": "pyiceberg.png",
+      "description": "PyIceberg Python library icon",
+      "category": "data-format",
+      "keywords": [
+        "pyiceberg",
+        "python",
+        "iceberg",
+        "library",
+        "api"
+      ],
+      "width": 0.41,
+      "height": 0.42,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "rdbms": {
+      "file": "rdbms.png",
+      "description": "RDBMS / relational database source icon",
+      "category": "storage",
+      "keywords": [
+        "rdbms",
+        "relational",
+        "database",
+        "sql",
+        "source"
+      ],
+      "width": 0.31,
+      "height": 0.31,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        74,
+        75,
+        76
+      ]
+    },
+    "redshift": {
+      "file": "redshift.png",
+      "description": "Amazon Redshift logo (from architecture slide)",
+      "category": "aws",
+      "keywords": [
+        "redshift",
+        "aws",
+        "data warehouse",
+        "analytics"
+      ],
+      "width": 0.46,
+      "height": 0.46,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "root-bucket": {
+      "file": "root-bucket.png",
+      "description": "Cloud root storage bucket icon",
+      "category": "storage",
+      "keywords": [
+        "root",
+        "bucket",
+        "storage",
+        "dbfs",
+        "cloud"
+      ],
+      "width": 0.28,
+      "height": 0.28,
+      "content_type": "image/png",
+      "source_slides": [
+        25,
+        27,
+        49,
+        62
+      ]
+    },
+    "salesforce": {
+      "file": "salesforce.png",
+      "description": "Salesforce CRM platform logo",
+      "category": "data-platform",
+      "keywords": [
+        "salesforce",
+        "crm",
+        "saas",
+        "cloud",
+        "data source"
+      ],
+      "width": 0.53,
+      "height": 0.37,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "sensors-and-iot": {
+      "file": "sensors-and-iot.png",
+      "description": "Sensors and IoT data source icon",
+      "category": "generic",
+      "keywords": [
+        "sensors",
+        "iot",
+        "internet of things",
+        "devices",
+        "telemetry"
+      ],
+      "width": 0.29,
+      "height": 0.29,
+      "content_type": "image/png",
+      "source_slides": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    "snowflake": {
+      "file": "snowflake.png",
+      "description": "Snowflake data cloud platform logo",
+      "category": "data-platform",
+      "keywords": [
+        "snowflake",
+        "data warehouse",
+        "cloud",
+        "analytics"
+      ],
+      "width": 0.45,
+      "height": 0.45,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "spark-stream": {
+      "file": "spark-stream.png",
+      "description": "Spark Structured Streaming icon",
+      "category": "databricks",
+      "keywords": [
+        "spark",
+        "streaming",
+        "structured streaming",
+        "real-time"
+      ],
+      "width": 0.35,
+      "height": 0.35,
+      "content_type": "image/png",
+      "source_slides": [
+        44
+      ]
+    },
+    "sql-warehouses": {
+      "file": "sql-warehouses.png",
+      "description": "Databricks SQL Warehouses icon",
+      "category": "compute",
+      "keywords": [
+        "sql warehouse",
+        "endpoint",
+        "serverless",
+        "sql",
+        "bi"
+      ],
+      "width": 0.35,
+      "height": 0.35,
+      "content_type": "image/png",
+      "source_slides": [
+        41,
+        49
+      ]
+    },
+    "starburst": {
+      "file": "starburst.png",
+      "description": "Starburst (Trino enterprise) query engine logo",
+      "category": "data-platform",
+      "keywords": [
+        "starburst",
+        "trino",
+        "query engine",
+        "federation"
+      ],
+      "width": 0.44,
+      "height": 0.44,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "storage": {
+      "file": "storage.png",
+      "description": "Databricks storage layer icon",
+      "category": "storage",
+      "keywords": [
+        "storage",
+        "layer",
+        "cloud",
+        "data",
+        "databricks"
+      ],
+      "width": 0.56,
+      "height": 0.56,
+      "content_type": "image/png",
+      "source_slides": [
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    "time-series-resampled-interpolated": {
+      "file": "time-series-resampled-interpolated.png",
+      "description": "Time series resampling / interpolation icon",
+      "category": "ai-ml",
+      "keywords": [
+        "time series",
+        "resampling",
+        "interpolation",
+        "signal"
+      ],
+      "width": 0.64,
+      "height": 0.64,
+      "content_type": "image/png",
+      "source_slides": [
+        44
+      ]
+    },
+    "trino": {
+      "file": "trino.png",
+      "description": "Trino distributed SQL query engine logo",
+      "category": "data-platform",
+      "keywords": [
+        "trino",
+        "distributed",
+        "sql",
+        "query engine",
+        "presto"
+      ],
+      "width": 0.31,
+      "height": 0.46,
+      "content_type": "image/png",
+      "source_slides": [
+        57
+      ]
+    },
+    "unallocated-pool": {
+      "file": "unallocated-pool.png",
+      "description": "Unallocated resource pool icon",
+      "category": "compute",
+      "keywords": [
+        "pool",
+        "unallocated",
+        "resources",
+        "serverless",
+        "shared"
+      ],
+      "width": 0.37,
+      "height": 0.37,
+      "content_type": "image/png",
+      "source_slides": [
+        25,
+        29
+      ]
+    },
+    "unity-catalog": {
+      "file": "unity-catalog.png",
+      "description": "Databricks Unity Catalog governance icon",
+      "category": "databricks",
+      "keywords": [
+        "unity catalog",
+        "governance",
+        "metadata",
+        "access control"
+      ],
+      "width": 0.31,
+      "height": 0.31,
+      "content_type": "image/png",
+      "source_slides": [
+        7
+      ]
+    },
+    "user": {
+      "file": "user.png",
+      "description": "Single user / person icon",
+      "category": "user-access",
+      "keywords": [
+        "user",
+        "person",
+        "identity",
+        "account"
+      ],
+      "width": 0.64,
+      "height": 0.64,
+      "content_type": "image/png",
+      "source_slides": [
+        51,
+        52,
+        53
+      ]
+    },
+    "username": {
+      "file": "username.png",
+      "description": "Username / credential badge icon",
+      "category": "user-access",
+      "keywords": [
+        "username",
+        "credential",
+        "login",
+        "identity",
+        "badge"
+      ],
+      "width": 0.73,
+      "height": 0.4,
+      "content_type": "image/png",
+      "source_slides": [
+        63
+      ]
+    },
+    "users": {
+      "file": "users.png",
+      "description": "Users / people group icon (large)",
+      "category": "user-access",
+      "keywords": [
+        "users",
+        "people",
+        "group",
+        "team",
+        "access"
+      ],
+      "width": 0.56,
+      "height": 0.56,
+      "content_type": "image/png",
+      "source_slides": [
+        14,
+        15,
+        16,
+        17,
+        20,
+        23,
+        27,
+        31,
+        32,
+        34,
+        35,
+        36,
+        38,
+        59,
+        60
+      ]
+    },
+    "users-small": {
+      "file": "users-small.png",
+      "description": "Users / people group icon (small)",
+      "category": "user-access",
+      "keywords": [
+        "users",
+        "people",
+        "group",
+        "team",
+        "access"
+      ],
+      "width": 0.44,
+      "height": 0.44,
+      "content_type": "image/png",
+      "source_slides": [
+        41
+      ]
+    },
+    "workspace": {
+      "file": "workspace.png",
+      "description": "Databricks workspace icon",
+      "category": "databricks",
+      "keywords": [
+        "workspace",
+        "environment",
+        "project",
+        "databricks"
+      ],
+      "width": 0.3,
+      "height": 0.3,
+      "content_type": "image/png",
+      "source_slides": [
+        41,
+        49
+      ]
+    },
+    "write-audit-log": {
+      "file": "write-audit-log.png",
+      "description": "Write audit log / logging pipeline icon",
+      "category": "security",
+      "keywords": [
+        "audit log",
+        "write",
+        "logging",
+        "compliance",
+        "trail"
+      ],
+      "width": 1.83,
+      "height": 0.67,
+      "content_type": "image/png",
+      "source_slides": [
+        51,
+        52,
+        53
+      ]
+    }
+  }
+}

@@ -13,6 +13,7 @@ import json
 import argparse
 import re
 import sys
+import unicodedata
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
@@ -38,6 +39,8 @@ TEMPLATE_PATH = SKILL_DIR / "assets" / "databricks" / "template.pptx"
 THEME_PATH = SKILL_DIR / "themes" / "databricks.json"
 CATALOG_PPTX_PATH = SKILL_DIR / "assets" / "databricks" / "system_architecture_catalog.pptx"
 CATALOG_JSON_PATH = SKILL_DIR / "assets" / "databricks" / "architecture_catalog.json"
+ICON_CATALOG_PATH = SKILL_DIR / "assets" / "icons" / "icon_catalog.json"
+ICON_DIR = SKILL_DIR / "assets" / "icons"
 
 # Valid slide types (26 total)
 VALID_SLIDE_TYPES = {
@@ -444,11 +447,35 @@ class DatabricksSlideGenerator:
             data: Slide data dict
             prefer_dark: Use dark background (default True for structural slides)
         """
+        from lxml import etree
+        ns_a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+
         slide = self._create_slide("title", data, prefer_dark=prefer_dark)
 
         # Fill title (idx 0)
+        # The layout's title placeholder is 56pt with noAutofit and anchor=b.
+        # Long or multi-line titles at 56pt overflow upward into the
+        # Databricks logo. Use a smaller font that fits the box, and
+        # explicitly set anchor=b + normAutofit at the slide level.
         title_ph = self.get_placeholder(slide, idx=0)
-        self.fill_text(title_ph, data.get("title", "Presentation Title"))
+        title_text = data.get("title", "Presentation Title")
+        title_font_size = 44 if "\n" in title_text or len(title_text) > 30 else 56
+        self.fill_text(title_ph, title_text, font_size=title_font_size)
+
+        if title_ph is not None:
+            ns_p = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+            txBody = title_ph._element.find(f'{{{ns_p}}}txBody')
+            if txBody is None:
+                txBody = title_ph._element.find(f'{{{ns_a}}}txBody')
+            if txBody is not None:
+                bodyPr = txBody.find(f'{{{ns_a}}}bodyPr')
+                if bodyPr is not None:
+                    bodyPr.set('anchor', 'b')
+                    for child in list(bodyPr):
+                        localname = etree.QName(child.tag).localname
+                        if localname in ('noAutofit', 'spAutoFit', 'normAutofit'):
+                            bodyPr.remove(child)
+                    etree.SubElement(bodyPr, f'{{{ns_a}}}normAutofit')
 
         # Fill subtitle (idx 1) - may contain author/date
         subtitle_ph = self.get_placeholder(slide, idx=1)
@@ -667,20 +694,46 @@ class DatabricksSlideGenerator:
             if subtitle_ph:
                 self.fill_text(subtitle_ph, data["subtitle"])
 
-        # Headers (idx 3, 4)
         columns = data.get("columns", [])
+
+        # -- Layout adjustment: place icons and shift columns up --
+        # Layout has a 1.5" gap (1.92"–3.42") for icon spots.
+        # Place icons there and move headers+bodies up for more body room.
+        icon_top = Inches(2.10)
+        icon_size = Inches(0.50)
+        header_top = Inches(2.72)
+        body_top = Inches(3.50)
+        body_height = Inches(3.30)
+
+        # Column centers for icon placement (based on body placeholder positions)
+        col_centers_in = [0.83 + 4.94 / 2, 7.58 + 4.92 / 2]  # 3.30, 10.04
+
+        for i, col in enumerate(columns[:2]):
+            icon_name = col.get("icon")
+            if icon_name and i < len(col_centers_in):
+                self._place_column_icon(
+                    slide, icon_name, col_centers_in[i], icon_top, icon_size
+                )
+
+        # Headers (idx 3, 4) — moved up
         for i, col in enumerate(columns[:2]):
             header_ph = self.get_placeholder(slide, idx=3+i)
-            if header_ph and col.get("header"):
-                self.fill_text(header_ph, col["header"])
+            if header_ph:
+                # Read all inherited values before overriding any
+                ol, ow, oh = header_ph.left, header_ph.width, header_ph.height
+                header_ph.left, header_ph.top = ol, header_top
+                header_ph.width, header_ph.height = ow, oh
+                if col.get("header"):
+                    self.fill_text(header_ph, col["header"])
 
-        # Content (idx 1, 2)
+        # Content (idx 1, 2) — moved up with more height
         for i, col in enumerate(columns[:2]):
             body_ph = self.get_placeholder(slide, idx=1+i)
+            if body_ph:
+                ol, ow = body_ph.left, body_ph.width
+                body_ph.left, body_ph.top = ol, body_top
+                body_ph.width, body_ph.height = ow, body_height
             self.fill_bullets(body_ph, col.get("items", []))
-
-        # Icons would go in the icon spots - template has picture placeholders
-        # For now, users can add icons manually or we can extend this later
 
     def add_three_column_icons_slide(self, data: Dict[str, Any]) -> None:
         """Create three-column slide with icon spots."""
@@ -698,17 +751,49 @@ class DatabricksSlideGenerator:
 
         columns = data.get("columns", [])
 
-        # Headers (idx 3, 4, 6)
+        # -- Layout adjustment: place icons and shift columns up --
+        # Layout has a 1.5" gap (1.92"–3.42") for icon spots.
+        # Place icons there and move headers+bodies up for more body room.
+        icon_top = Inches(2.10)
+        icon_size = Inches(0.50)
+        header_top = Inches(2.72)
+        body_top = Inches(3.50)
+        body_height = Inches(3.30)
+
+        # Column centers for icon placement (based on body placeholder positions)
+        col_centers_in = [
+            0.83 + 3.53 / 2,  # Col 1: 2.595
+            4.90 + 3.53 / 2,  # Col 2: 6.665
+            8.93 + 3.53 / 2,  # Col 3: 10.695
+        ]
+
+        for i, col in enumerate(columns[:3]):
+            icon_name = col.get("icon")
+            if icon_name and i < len(col_centers_in):
+                self._place_column_icon(
+                    slide, icon_name, col_centers_in[i], icon_top, icon_size
+                )
+
+        # Headers (idx 3, 4, 6) — moved up
         header_indices = [3, 4, 6]
         for i, col in enumerate(columns[:3]):
             header_ph = self.get_placeholder(slide, idx=header_indices[i])
-            if header_ph and col.get("header"):
-                self.fill_text(header_ph, col["header"])
+            if header_ph:
+                # Read all inherited values before overriding any
+                ol, ow, oh = header_ph.left, header_ph.width, header_ph.height
+                header_ph.left, header_ph.top = ol, header_top
+                header_ph.width, header_ph.height = ow, oh
+                if col.get("header"):
+                    self.fill_text(header_ph, col["header"])
 
-        # Content (idx 1, 2, 5)
+        # Content (idx 1, 2, 5) — moved up with more height
         body_indices = [1, 2, 5]
         for i, col in enumerate(columns[:3]):
             body_ph = self.get_placeholder(slide, idx=body_indices[i])
+            if body_ph:
+                ol, ow = body_ph.left, body_ph.width
+                body_ph.left, body_ph.top = ol, body_top
+                body_ph.width, body_ph.height = ow, body_height
             self.fill_bullets(body_ph, col.get("items", []))
 
     def add_cards_slide(self, data: Dict[str, Any]) -> None:
@@ -1344,6 +1429,18 @@ class DatabricksSlideGenerator:
             self._catalog_prs = Presentation(str(CATALOG_PPTX_PATH))
         return self._catalog_prs
 
+    def _get_icon_catalog(self):
+        """Lazy-load the icon catalog JSON (cached)."""
+        if not hasattr(self, '_icon_catalog'):
+            if not ICON_CATALOG_PATH.exists():
+                raise FileNotFoundError(
+                    f"Icon catalog not found: {ICON_CATALOG_PATH}\n"
+                    f"Run: python3 scripts/build-icon-catalog.py"
+                )
+            with open(ICON_CATALOG_PATH, 'r') as f:
+                self._icon_catalog = json.load(f)
+        return self._icon_catalog
+
     def _import_catalog_slide(self, data: Dict[str, Any]) -> None:
         """Import a pre-built architecture diagram from the catalog.
 
@@ -1450,6 +1547,23 @@ class DatabricksSlideGenerator:
             rId_map[old_rId] = new_rId
             blip.set(f'{{{nsmap_r}}}embed', new_rId)
 
+        # --- Apply pre-insertion modifications (XML-level) ---
+        # Order: remove first (on original labels), then replace, then move
+        modifications = data.get("modifications", {})
+
+        if modifications.get("remove_shapes"):
+            self._apply_shape_removals(new_cSld, modifications["remove_shapes"])
+            self._cleanup_empty_containers(new_cSld)
+        if modifications.get("text_replacements"):
+            modified = self._apply_text_replacements(new_cSld, modifications["text_replacements"])
+            self._auto_fit_text(new_cSld, modified_txbodies=modified)
+        if data.get("title"):
+            self._apply_title_override(new_cSld, data["title"])
+        if modifications.get("move_shapes"):
+            self._apply_shape_moves(new_cSld, modifications["move_shapes"])
+        if modifications.get("move_groups"):
+            self._apply_group_moves(new_cSld, modifications["move_groups"])
+
         # Replace the target slide's cSld with the copied one
         target_cSld = target_slide._element.find(
             f'{{{nsmap_p}}}cSld'
@@ -1458,6 +1572,17 @@ class DatabricksSlideGenerator:
             target_slide._element.replace(target_cSld, new_cSld)
         else:
             target_slide._element.insert(0, new_cSld)
+
+        # Update python-pptx's cached spTree reference after cSld replacement
+        # so that subsequent shape additions go to the correct tree.
+        # SlideShapes stores the spTree as _grpSp (inherited from _BaseGroupShapes).
+        new_spTree = new_cSld.find(f'{{{nsmap_p}}}spTree')
+        if new_spTree is not None:
+            target_slide.shapes._grpSp = new_spTree
+
+        # --- Apply post-insertion modifications (live slide object) ---
+        if modifications.get("overlays"):
+            self._apply_overlays(target_slide, modifications["overlays"])
 
         # --- Handle speaker notes ---
         custom_notes = data.get("notes")
@@ -1604,6 +1729,1050 @@ class DatabricksSlideGenerator:
             parent = scheme_clr.getparent()
             if parent is not None:
                 parent.replace(scheme_clr, new_elem)
+
+    # =========================================================================
+    # Architecture Slide Modification Methods
+    # =========================================================================
+
+    _NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+    _NS_P = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+    _EMU_PER_INCH = 914400
+
+    @staticmethod
+    def _normalize_text(text):
+        """Normalize Unicode whitespace for comparison."""
+        text = unicodedata.normalize('NFKC', text)
+        text = re.sub(r'[\u00a0\u200b\u200c\u200d\ufeff]', ' ', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
+
+    def _get_all_txbodies(self, element):
+        """Find all txBody elements in an XML tree (including inside groups).
+
+        txBody may be in p: namespace (top-level shapes) or a: namespace.
+        """
+        results = element.findall(f'.//{{{self._NS_P}}}txBody')
+        results += element.findall(f'.//{{{self._NS_A}}}txBody')
+        return results
+
+    def _concat_paragraph_text(self, p_elem):
+        """Concatenate all run texts in a paragraph element."""
+        runs = p_elem.findall(f'{{{self._NS_A}}}r')
+        return "".join(
+            r.findtext(f'{{{self._NS_A}}}t', default='') for r in runs
+        )
+
+    def _get_shape_name_from_sp(self, sp_elem):
+        """Get shape name from an sp element's nvSpPr/cNvPr."""
+        for ns in [self._NS_P, self._NS_A]:
+            cNvPr = sp_elem.find(f'{{{ns}}}nvSpPr/{{{ns}}}cNvPr')
+            if cNvPr is not None:
+                return cNvPr.get('name', '')
+        cNvPr = sp_elem.find(f'.//{{{self._NS_P}}}cNvPr')
+        if cNvPr is not None:
+            return cNvPr.get('name', '')
+        return ''
+
+    def _apply_text_replacements(self, cSld, replacements):
+        """Replace text in shapes within a cSld XML tree.
+
+        Each replacement is a dict with:
+          - find: text to search for (required)
+          - replace: replacement text (required)
+          - shape_name: limit to shapes with this name (optional)
+          - match_index: 0-based index if find text appears multiple times (optional)
+
+        Preserves formatting of the first matching run.
+        Returns a set of modified txBody elements (for auto-fit scoping).
+        Uses direct element references (not id()) since lxml proxy objects
+        can be garbage-collected and their id() values reused.
+        """
+        modified_txbodies = set()
+        for repl in replacements:
+            find_text = self._normalize_text(repl.get("find", ""))
+            replace_text = repl.get("replace", "")
+            target_shape_name = repl.get("shape_name")
+            match_index = repl.get("match_index", 0)
+
+            if not find_text:
+                continue
+
+            match_count = 0
+            for txBody in self._get_all_txbodies(cSld):
+                # Check shape_name filter if specified
+                if target_shape_name:
+                    sp = txBody.getparent()
+                    if sp is not None:
+                        name = self._get_shape_name_from_sp(sp)
+                        if name != target_shape_name:
+                            continue
+
+                for p in txBody.findall(f'{{{self._NS_A}}}p'):
+                    runs = p.findall(f'{{{self._NS_A}}}r')
+                    if not runs:
+                        continue
+
+                    full_text = self._normalize_text(self._concat_paragraph_text(p))
+                    if find_text not in full_text:
+                        continue
+
+                    if match_count != match_index:
+                        match_count += 1
+                        continue
+
+                    # Perform replacement: put new text in first run, clear others
+                    new_full_text = full_text.replace(find_text, replace_text)
+                    t_elem = runs[0].find(f'{{{self._NS_A}}}t')
+                    if t_elem is not None:
+                        t_elem.text = new_full_text
+                    for extra_run in runs[1:]:
+                        t_elem = extra_run.find(f'{{{self._NS_A}}}t')
+                        if t_elem is not None:
+                            t_elem.text = ""
+
+                    modified_txbodies.add(txBody)
+                    match_count += 1
+                    break  # Move to next replacement
+                else:
+                    continue
+                break  # Found match, move to next replacement
+
+        return modified_txbodies
+
+    def _apply_title_override(self, cSld, new_title):
+        """Replace the title text on an imported slide.
+
+        Identifies the title by scoring shapes: largest font + topmost position wins.
+        """
+        best_score = -1
+        best_txBody = None
+        best_p = None
+
+        for txBody in self._get_all_txbodies(cSld):
+            for p in txBody.findall(f'{{{self._NS_A}}}p'):
+                runs = p.findall(f'{{{self._NS_A}}}r')
+                if not runs:
+                    continue
+
+                text = self._normalize_text(self._concat_paragraph_text(p))
+                if not text or len(text) <= 1:
+                    continue
+
+                # Score: font size (higher = better) + inverted top position (higher on slide = better)
+                font_size = 0
+                rPr = runs[0].find(f'{{{self._NS_A}}}rPr')
+                if rPr is not None:
+                    sz = rPr.get('sz')
+                    if sz:
+                        font_size = int(sz)
+
+                # Get top position from parent shape
+                sp = txBody.getparent()
+                top = 99999999
+                if sp is not None:
+                    # spPr may be in p: or a: namespace
+                    for ns in [self._NS_P, self._NS_A]:
+                        spPr = sp.find(f'{{{ns}}}spPr')
+                        if spPr is not None:
+                            xfrm = spPr.find(f'{{{self._NS_A}}}xfrm')
+                            if xfrm is not None:
+                                off = xfrm.find(f'{{{self._NS_A}}}off')
+                                if off is not None:
+                                    y = off.get('y')
+                                    if y:
+                                        top = int(y)
+                            break
+
+                # Score combines font size (weight 2) and inversed top position
+                score = (font_size * 2) + (99999999 - top)
+                if score > best_score:
+                    best_score = score
+                    best_txBody = txBody
+                    best_p = p
+
+        if best_p is not None and best_txBody is not None:
+            from lxml import etree
+            runs = best_p.findall(f'{{{self._NS_A}}}r')
+            if runs:
+                t_elem = runs[0].find(f'{{{self._NS_A}}}t')
+                if t_elem is not None:
+                    t_elem.text = new_title
+                for extra_run in runs[1:]:
+                    t_elem = extra_run.find(f'{{{self._NS_A}}}t')
+                    if t_elem is not None:
+                        t_elem.text = ""
+
+            # Enable normAutofit so PowerPoint shrinks title text if needed
+            bodyPr = best_txBody.find(f'{{{self._NS_A}}}bodyPr')
+            if bodyPr is not None:
+                for child in list(bodyPr):
+                    if etree.QName(child.tag).localname in ('noAutofit', 'spAutoFit'):
+                        bodyPr.remove(child)
+                etree.SubElement(bodyPr, f'{{{self._NS_A}}}normAutofit')
+
+    def _auto_fit_text(self, cSld, modified_txbodies=None):
+        """Enable PowerPoint's native auto-fit on shapes with replaced text.
+
+        Replaces <a:noAutofit/> with <a:normAutofit/> in the bodyPr element
+        of modified shapes. This tells PowerPoint to automatically shrink
+        text to fit the shape bounds using its real font metrics, which is
+        far more accurate than heuristic character-width estimation.
+
+        Args:
+            cSld: The cSld XML element
+            modified_txbodies: Set of txBody elements that were modified.
+                              If None, all shapes are checked (backward compat).
+        """
+        from lxml import etree
+        ns_a = self._NS_A
+
+        for txBody in self._get_all_txbodies(cSld):
+            if modified_txbodies is not None and txBody not in modified_txbodies:
+                continue
+
+            bodyPr = txBody.find(f'{{{ns_a}}}bodyPr')
+            if bodyPr is None:
+                continue
+
+            # Remove existing noAutofit or spAutoFit if present
+            for child in list(bodyPr):
+                localname = etree.QName(child.tag).localname
+                if localname in ('noAutofit', 'spAutoFit'):
+                    bodyPr.remove(child)
+
+            # Add normAutofit — PowerPoint will shrink text to fit
+            etree.SubElement(bodyPr, f'{{{ns_a}}}normAutofit')
+
+    def _apply_overlays(self, slide, overlays):
+        """Add overlay shapes on top of an imported slide.
+
+        Each overlay dict specifies:
+          - type: "textbox", "rectangle", "rounded_rectangle", "oval", or "icon"
+          - text: text content (optional, not used for icon type)
+          - left, top, width, height: position in inches (required; for icon,
+            omitting width or height preserves aspect ratio)
+          - font_size: in points (default 11)
+          - font_color: hex color (default "#FFFFFF")
+          - fill_color: hex color for shape fill (optional)
+          - border_color: hex color for border (optional)
+          - bold: boolean (default False)
+
+        Icon-specific fields:
+          - icon: name from icon catalog (e.g., "openai", "kafka")
+          - image_path: path to a custom image file (used if icon is not set)
+        """
+        shape_type_map = {
+            "textbox": None,  # Use add_textbox
+            "rectangle": MSO_SHAPE.RECTANGLE,
+            "rounded_rectangle": MSO_SHAPE.ROUNDED_RECTANGLE,
+            "oval": MSO_SHAPE.OVAL,
+        }
+
+        for overlay in overlays:
+            otype = overlay.get("type", "textbox")
+
+            # --- Icon overlay ---
+            if otype == "icon":
+                self._apply_icon_overlay(slide, overlay)
+                continue
+
+            left = Inches(overlay.get("left", 0))
+            top = Inches(overlay.get("top", 0))
+            width = Inches(overlay.get("width", 2))
+            height = Inches(overlay.get("height", 0.5))
+            text = overlay.get("text", "")
+            font_size = overlay.get("font_size", 11)
+            font_color = overlay.get("font_color", "#FFFFFF")
+            fill_color = overlay.get("fill_color")
+            border_color = overlay.get("border_color")
+            bold = overlay.get("bold", False)
+
+            if otype == "textbox":
+                shape = slide.shapes.add_textbox(left, top, width, height)
+            else:
+                mso_type = shape_type_map.get(otype, MSO_SHAPE.RECTANGLE)
+                shape = slide.shapes.add_shape(mso_type, left, top, width, height)
+
+            # Apply fill
+            if fill_color:
+                shape.fill.solid()
+                shape.fill.fore_color.rgb = hex_to_rgb(fill_color)
+            elif otype != "textbox":
+                shape.fill.background()
+
+            # Apply border
+            if border_color:
+                shape.line.color.rgb = hex_to_rgb(border_color)
+                shape.line.width = Pt(1)
+            elif otype != "textbox":
+                shape.line.fill.background()
+
+            # Add text
+            if text:
+                tf = shape.text_frame
+                tf.word_wrap = True
+                p = tf.paragraphs[0]
+                p.text = text
+                p.font.name = FONT_FAMILY
+                p.font.size = Pt(font_size)
+                p.font.bold = bold
+                p.font.color.rgb = hex_to_rgb(font_color)
+                p.alignment = PP_ALIGN.CENTER
+
+    def _place_column_icon(self, slide, icon_name: str,
+                           col_center_in: float, icon_top, icon_size) -> None:
+        """Place an icon centered in a column's icon spot.
+
+        Args:
+            slide: The slide to add the icon to
+            icon_name: Icon name from the icon catalog
+            col_center_in: Horizontal center of the column in inches
+            icon_top: Top position (Emu)
+            icon_size: Width and height (Emu, square)
+        """
+        try:
+            catalog = self._get_icon_catalog()
+            icon_entry = catalog.get("icons", {}).get(icon_name)
+            if not icon_entry:
+                print(f"Warning: icon '{icon_name}' not found in catalog")
+                return
+            icon_path = str(ICON_DIR / icon_entry["file"])
+            icon_left = Inches(col_center_in) - icon_size // 2
+            slide.shapes.add_picture(icon_path, icon_left, icon_top,
+                                     icon_size, icon_size)
+        except Exception as e:
+            print(f"Warning: could not place icon '{icon_name}': {e}")
+
+    def _apply_icon_overlay(self, slide, overlay):
+        """Add an icon image overlay on top of a slide.
+
+        Resolves the image from either:
+          - icon: name from the icon catalog (e.g., "openai")
+          - image_path: direct path to an image file
+
+        Position/size via left, top, width, height (inches).
+        If only width or height is given, the other is set to None
+        so python-pptx preserves the aspect ratio.
+        """
+        icon_name = overlay.get("icon")
+        image_path = overlay.get("image_path")
+
+        if icon_name:
+            catalog = self._get_icon_catalog()
+            icon_entry = catalog.get("icons", {}).get(icon_name)
+            if not icon_entry:
+                print(f"Warning: icon '{icon_name}' not found in catalog, skipping")
+                return
+            resolved_path = str(ICON_DIR / icon_entry["file"])
+        elif image_path:
+            resolved_path = str(Path(image_path).expanduser())
+            if not Path(resolved_path).exists():
+                print(f"Warning: image_path '{image_path}' not found, skipping")
+                return
+        else:
+            print("Warning: icon overlay missing both 'icon' and 'image_path', skipping")
+            return
+
+        left = Inches(overlay.get("left", 0))
+        top = Inches(overlay.get("top", 0))
+
+        # If only one dimension is given, set the other to None
+        # so python-pptx preserves the original aspect ratio
+        has_width = "width" in overlay
+        has_height = "height" in overlay
+        width = Inches(overlay["width"]) if has_width else None
+        height = Inches(overlay["height"]) if has_height else None
+
+        slide.shapes.add_picture(resolved_path, left, top, width, height)
+
+    def _apply_shape_removals(self, cSld, removals):
+        """Remove shapes from a cSld XML tree by text content or shape name.
+
+        Each removal dict has:
+          - text: match shapes containing this text (optional)
+          - shape_name: match shapes by name attribute (optional)
+          - remove_group: if true (default), remove the entire parent group
+            when the matched shape is inside a group. This is the typical
+            behavior for reference architecture source/consumer labels where
+            the icon and label are grouped together.
+
+        At least one of text/shape_name must be provided.
+        Works for both top-level and grouped shapes.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        for removal in removals:
+            find_text = removal.get("text")
+            find_name = removal.get("shape_name")
+            remove_group = removal.get("remove_group", True)
+
+            if not find_text and not find_name:
+                continue
+
+            if find_text:
+                find_text = self._normalize_text(find_text)
+
+            # Find all sp elements (including in groups)
+            for sp in cSld.findall(f'.//{{{ns_p}}}sp'):
+                matched = False
+
+                if find_name:
+                    name = self._get_shape_name_from_sp(sp)
+                    if name == find_name:
+                        matched = True
+
+                if find_text and not matched:
+                    txBody = sp.find(f'{{{ns_p}}}txBody')
+                    if txBody is None:
+                        txBody = sp.find(f'{{{ns_a}}}txBody')
+                    if txBody is not None:
+                        full = ""
+                        for p in txBody.findall(f'{{{ns_a}}}p'):
+                            full += self._concat_paragraph_text(p) + " "
+                        full = self._normalize_text(full)
+                        if find_text in full:
+                            matched = True
+
+                if matched:
+                    parent = sp.getparent()
+                    if parent is None:
+                        continue
+
+                    # If shape is inside a group and remove_group is enabled,
+                    # remove the entire parent group (e.g. icon + label unit)
+                    if remove_group and parent.tag == f'{{{ns_p}}}grpSp':
+                        group_parent = parent.getparent()
+                        if group_parent is not None:
+                            group_parent.remove(parent)
+                    else:
+                        parent.remove(sp)
+
+                        # Check if parent group is now empty
+                        if parent.tag == f'{{{ns_p}}}grpSp':
+                            remaining = parent.findall(f'{{{ns_p}}}sp')
+                            remaining += parent.findall(f'{{{ns_p}}}grpSp')
+                            remaining += parent.findall(f'{{{ns_p}}}cxnSp')
+                            remaining += parent.findall(f'{{{ns_p}}}pic')
+                            if not remaining:
+                                gp = parent.getparent()
+                                if gp is not None:
+                                    gp.remove(parent)
+                    break  # One removal per entry
+
+    def _cleanup_empty_containers(self, cSld):
+        """After shape removals, detect and remove empty container boxes.
+
+        Finds large AUTO_SHAPE rectangles with no text content (bounding boxes),
+        checks if any content groups still overlap them spatially, and removes
+        empty ones. Adjacent non-empty containers are expanded to fill the
+        vacated vertical space.
+
+        Also removes orphaned labels (small text shapes) whose vertical center
+        falls within the bounds of a removed container.
+        """
+        from lxml import etree
+
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        spTree = cSld.find(f'{{{ns_p}}}spTree')
+        if spTree is None:
+            return
+
+        EMU_HALF_INCH = 457200
+        EMU_TENTH_INCH = 91440
+
+        def get_sp_xfrm(sp_elem):
+            """Get (x, y, cx, cy) in EMU from a shape's spPr/xfrm."""
+            for ns in [ns_p, ns_a]:
+                spPr = sp_elem.find(f'{{{ns}}}spPr')
+                if spPr is not None:
+                    xfrm = spPr.find(f'{{{ns_a}}}xfrm')
+                    if xfrm is not None:
+                        off = xfrm.find(f'{{{ns_a}}}off')
+                        ext = xfrm.find(f'{{{ns_a}}}ext')
+                        if off is not None and ext is not None:
+                            return (
+                                int(off.get('x', '0')),
+                                int(off.get('y', '0')),
+                                int(ext.get('cx', '0')),
+                                int(ext.get('cy', '0')),
+                                off, ext,
+                            )
+            return None
+
+        def set_sp_pos(off_elem, ext_elem, y, cy):
+            """Update a shape's y position and height."""
+            off_elem.set('y', str(int(y)))
+            ext_elem.set('cy', str(int(cy)))
+
+        def get_grp_xfrm(grp_elem):
+            """Get (x, y, cx, cy, off_elem) from a group's grpSpPr/xfrm."""
+            for ns in [ns_p, ns_a]:
+                grpSpPr = grp_elem.find(f'{{{ns}}}grpSpPr')
+                if grpSpPr is not None:
+                    xfrm = grpSpPr.find(f'{{{ns_a}}}xfrm')
+                    if xfrm is not None:
+                        off = xfrm.find(f'{{{ns_a}}}off')
+                        ext = xfrm.find(f'{{{ns_a}}}ext')
+                        if off is not None and ext is not None:
+                            return (
+                                int(off.get('x', '0')),
+                                int(off.get('y', '0')),
+                                int(ext.get('cx', '0')),
+                                int(ext.get('cy', '0')),
+                                off,
+                            )
+            return None
+
+        def get_sp_text(sp_elem):
+            """Get concatenated text from a shape."""
+            text = ""
+            for txBody in [sp_elem.find(f'{{{ns_p}}}txBody'),
+                           sp_elem.find(f'{{{ns_a}}}txBody')]:
+                if txBody is not None:
+                    for p in txBody.findall(f'{{{ns_a}}}p'):
+                        text += self._concat_paragraph_text(p) + " "
+            return text.strip()
+
+        def overlaps(ax, ay, acx, acy, bx, by, bcx, bcy):
+            """Check if two rectangles overlap spatially."""
+            return (ax < bx + bcx and ax + acx > bx and
+                    ay < by + bcy and ay + acy > by)
+
+        # --- Collect shapes by type ---
+        containers = []   # (elem, x, y, cx, cy, off, ext)
+        content_groups = []  # (x, y, cx, cy, off_elem)
+        label_shapes = []    # (elem, x, y, cx, cy, text)
+
+        for elem in list(spTree):
+            tag = etree.QName(elem.tag).localname
+
+            if tag == 'sp':
+                xfrm_data = get_sp_xfrm(elem)
+                if xfrm_data is None:
+                    continue
+                x, y, cx, cy, off, ext = xfrm_data
+                text = get_sp_text(elem)
+
+                if not text and cx > EMU_HALF_INCH and cy > EMU_HALF_INCH:
+                    # Large shape with no text = potential container
+                    containers.append((elem, x, y, cx, cy, off, ext))
+                elif text and cy < EMU_HALF_INCH:
+                    # Small text shape = potential label
+                    label_shapes.append((elem, x, y, cx, cy, text))
+
+            elif tag == 'grpSp':
+                grp_data = get_grp_xfrm(elem)
+                if grp_data is not None:
+                    content_groups.append(grp_data)
+
+        if not containers:
+            return
+
+        # --- Classify containers as empty or non-empty ---
+        empty = []
+        non_empty = []
+
+        for cdata in containers:
+            elem, cx_, cy_, ccx, ccy, off, ext = cdata
+            has_content = False
+            for gx, gy, gcx, gcy, _ in content_groups:
+                if overlaps(cx_, cy_, ccx, ccy, gx, gy, gcx, gcy):
+                    has_content = True
+                    break
+            if has_content:
+                non_empty.append(cdata)
+            else:
+                empty.append(cdata)
+
+        if not empty:
+            return
+
+        # --- Remove empty containers and orphaned labels ---
+        for elem, ex, ey, ecx, ecy, _, _ in empty:
+            try:
+                spTree.remove(elem)
+            except ValueError:
+                pass
+
+            # Remove labels whose vertical center falls within the empty box
+            for ldata in label_shapes[:]:
+                lelem, lx, ly, lcx, lcy, ltext = ldata
+                label_cy_mid = ly + lcy // 2
+                if ey <= label_cy_mid <= ey + ecy and lx < ex + ecx:
+                    try:
+                        spTree.remove(lelem)
+                        label_shapes.remove(ldata)
+                    except ValueError:
+                        pass
+
+        # --- Expand adjacent non-empty containers to fill gaps ---
+        # Group containers by column (similar x position), only in columns
+        # that had empty containers removed.
+        def same_column(x1, x2):
+            return abs(x1 - x2) < EMU_TENTH_INCH * 2
+
+        # Start from empty container columns only
+        columns = {}  # column_x -> [(y, cy, is_empty, off_elem, ext_elem)]
+        for elem, x, y, cx, cy, off, ext in empty:
+            col_key = None
+            for k in columns:
+                if same_column(k, x):
+                    col_key = k
+                    break
+            if col_key is None:
+                col_key = x
+                columns[col_key] = []
+            columns[col_key].append((y, cy, True, None, None))
+
+        # Only add non-empty containers that share a column with an empty one
+        for elem, x, y, cx, cy, off, ext in non_empty:
+            col_key = None
+            for k in columns:
+                if same_column(k, x):
+                    col_key = k
+                    break
+            if col_key is not None:
+                columns[col_key].append((y, cy, False, off, ext))
+
+        expanded_containers = []  # track which containers were actually expanded
+
+        for col_key, items in columns.items():
+            items.sort(key=lambda t: t[0])  # sort by y position
+
+            remaining = [(y, cy, off, ext) for y, cy, is_empty, off, ext
+                         in items if not is_empty]
+            if not remaining:
+                continue
+
+            # Get the full vertical range of the column
+            all_tops = [y for y, cy, _, _, _ in items]
+            all_bottoms = [y + cy for y, cy, _, _, _ in items]
+            col_top = min(all_tops)
+            col_bottom = max(all_bottoms)
+
+            if len(remaining) == 1:
+                # Single remaining box — expand to cover full column range
+                y, cy, off, ext = remaining[0]
+                set_sp_pos(off, ext, col_top, col_bottom - col_top)
+                expanded_containers.append((
+                    int(off.get('x', '0')), col_top,
+                    int(ext.get('cx', '0')), col_bottom - col_top))
+            else:
+                # Multiple remaining — expand first upward, last downward
+                # First box: expand up to column top
+                y0, cy0, off0, ext0 = remaining[0]
+                if y0 > col_top:
+                    set_sp_pos(off0, ext0, col_top, (y0 + cy0) - col_top)
+                expanded_containers.append((
+                    int(off0.get('x', '0')), int(off0.get('y', '0')),
+                    int(ext0.get('cx', '0')), int(ext0.get('cy', '0'))))
+
+                # Last box: expand down to column bottom
+                yn, cyn, offn, extn = remaining[-1]
+                if yn + cyn < col_bottom:
+                    set_sp_pos(offn, extn, yn, col_bottom - yn)
+                expanded_containers.append((
+                    int(offn.get('x', '0')), int(offn.get('y', '0')),
+                    int(extn.get('cx', '0')), int(extn.get('cy', '0'))))
+
+                # Middle boxes: expand to fill gaps between neighbors
+                for i in range(len(remaining) - 1):
+                    yi, cyi, offi, exti = remaining[i]
+                    yi1, _, _, _ = remaining[i + 1]
+                    gap = yi1 - (yi + cyi)
+                    if gap > EMU_TENTH_INCH:
+                        set_sp_pos(offi, exti, yi, yi1 - yi)
+                    if i > 0:
+                        expanded_containers.append((
+                            int(offi.get('x', '0')), int(offi.get('y', '0')),
+                            int(exti.get('cx', '0')), int(exti.get('cy', '0'))))
+
+        for ldata in label_shapes:
+            lelem, lx, ly, lcx, lcy, ltext = ldata
+            lxfrm = get_sp_xfrm(lelem)
+            if lxfrm is None:
+                continue
+            _, _, _, _, l_off, l_ext = lxfrm
+
+            # Find the container this label belongs to:
+            # label is to the left of or overlapping the container horizontally,
+            # and label's vertical center is within the container's bounds
+            label_vmid = ly + lcy // 2
+            best_container = None
+            for cx_, cy_, ccx, ccy in expanded_containers:
+                if (lx < cx_ + ccx and
+                        cy_ <= label_vmid <= cy_ + ccy):
+                    best_container = (cx_, cy_, ccx, ccy)
+                    break
+
+            if best_container is not None:
+                _, cont_y, _, cont_cy = best_container
+                # Center label vertically within container
+                new_label_y = cont_y + (cont_cy - lcy) // 2
+                l_off.set('y', str(int(new_label_y)))
+
+        # --- Reposition content groups to be centered in their container ---
+        for cx_, cy_, ccx, ccy in expanded_containers:
+            # Find all content groups inside this container
+            contained = []
+            for gx, gy, gcx, gcy, g_off in content_groups:
+                if overlaps(cx_, cy_, ccx, ccy, gx, gy, gcx, gcy):
+                    contained.append((gx, gy, gcx, gcy, g_off))
+
+            if not contained:
+                continue
+
+            # Calculate the bounding box of all contained groups
+            content_top = min(gy for _, gy, _, _, _ in contained)
+            content_bottom = max(gy + gcy for _, gy, _, gcy, _ in contained)
+            content_height = content_bottom - content_top
+
+            # Calculate the shift to center the content block in the container
+            container_center = cy_ + ccy // 2
+            content_center = content_top + content_height // 2
+            shift_y = container_center - content_center
+
+            if abs(shift_y) < EMU_TENTH_INCH:
+                continue  # Already centered
+
+            # Apply the shift to each group
+            for _, gy, _, _, g_off in contained:
+                new_gy = gy + shift_y
+                g_off.set('y', str(int(new_gy)))
+
+    def _get_group_transform(self, grpSp_elem):
+        """Extract group coordinate transform from a grpSp element.
+
+        Returns a dict with off_x/y, ext_cx/cy, chOff_x/y, chExt_cx/cy,
+        has_rotation, and _xfrm_elem (for in-place expansion), or None.
+        """
+        ns_a = self._NS_A
+        ns_p = self._NS_P
+
+        for ns in [ns_p, ns_a]:
+            grpSpPr = grpSp_elem.find(f'{{{ns}}}grpSpPr')
+            if grpSpPr is not None:
+                xfrm = grpSpPr.find(f'{{{ns_a}}}xfrm')
+                if xfrm is not None:
+                    off = xfrm.find(f'{{{ns_a}}}off')
+                    ext = xfrm.find(f'{{{ns_a}}}ext')
+                    chOff = xfrm.find(f'{{{ns_a}}}chOff')
+                    chExt = xfrm.find(f'{{{ns_a}}}chExt')
+                    if all(e is not None for e in [off, ext, chOff, chExt]):
+                        return {
+                            "off_x": int(off.get('x', '0')),
+                            "off_y": int(off.get('y', '0')),
+                            "ext_cx": int(ext.get('cx', '0')),
+                            "ext_cy": int(ext.get('cy', '0')),
+                            "chOff_x": int(chOff.get('x', '0')),
+                            "chOff_y": int(chOff.get('y', '0')),
+                            "chExt_cx": int(chExt.get('cx', '0')),
+                            "chExt_cy": int(chExt.get('cy', '0')),
+                            "has_rotation": xfrm.get('rot') is not None,
+                            "_off": off,
+                            "_ext": ext,
+                            "_chOff": chOff,
+                            "_chExt": chExt,
+                        }
+        return None
+
+    def _slide_to_child_coords(self, slide_x_emu, slide_y_emu, gxfrm):
+        """Convert slide-space EMU coordinates to child-space EMU.
+
+        Uses: child = chOff + (slide - off) * (chExt / ext)
+        """
+        if gxfrm["ext_cx"] == 0 or gxfrm["ext_cy"] == 0:
+            return slide_x_emu, slide_y_emu
+
+        child_x = gxfrm["chOff_x"] + int(
+            (slide_x_emu - gxfrm["off_x"])
+            * gxfrm["chExt_cx"] / gxfrm["ext_cx"]
+        )
+        child_y = gxfrm["chOff_y"] + int(
+            (slide_y_emu - gxfrm["off_y"])
+            * gxfrm["chExt_cy"] / gxfrm["ext_cy"]
+        )
+        return child_x, child_y
+
+    def _child_to_slide_coords(self, child_x_emu, child_y_emu, gxfrm):
+        """Convert child-space EMU coordinates to slide-space EMU.
+
+        Uses: slide = off + (child - chOff) * (ext / chExt)
+        """
+        if gxfrm["chExt_cx"] == 0 or gxfrm["chExt_cy"] == 0:
+            return child_x_emu, child_y_emu
+
+        slide_x = gxfrm["off_x"] + int(
+            (child_x_emu - gxfrm["chOff_x"])
+            * gxfrm["ext_cx"] / gxfrm["chExt_cx"]
+        )
+        slide_y = gxfrm["off_y"] + int(
+            (child_y_emu - gxfrm["chOff_y"])
+            * gxfrm["ext_cy"] / gxfrm["chExt_cy"]
+        )
+        return slide_x, slide_y
+
+    def _expand_group_bounds(self, gxfrm, child_x, child_y, child_w, child_h):
+        """Expand group bounds in-place if child shape exceeds current area.
+
+        Adjusts off/ext/chOff/chExt so that:
+        - The child shape fits within the group's child coordinate space
+        - Existing children don't visually shift (parent off shifts proportionally)
+        """
+        ch_right = child_x + child_w
+        ch_bottom = child_y + child_h
+
+        old_chOff_x = gxfrm["chOff_x"]
+        old_chOff_y = gxfrm["chOff_y"]
+        old_chExt_cx = gxfrm["chExt_cx"]
+        old_chExt_cy = gxfrm["chExt_cy"]
+
+        new_chOff_x = min(old_chOff_x, child_x)
+        new_chOff_y = min(old_chOff_y, child_y)
+        new_chRight = max(old_chOff_x + old_chExt_cx, ch_right)
+        new_chBottom = max(old_chOff_y + old_chExt_cy, ch_bottom)
+        new_chExt_cx = new_chRight - new_chOff_x
+        new_chExt_cy = new_chBottom - new_chOff_y
+
+        if (new_chOff_x == old_chOff_x and new_chOff_y == old_chOff_y
+                and new_chExt_cx == old_chExt_cx and new_chExt_cy == old_chExt_cy):
+            return  # No expansion needed
+
+        # Compute scale factors (child-to-parent)
+        sx = gxfrm["ext_cx"] / old_chExt_cx if old_chExt_cx else 1.0
+        sy = gxfrm["ext_cy"] / old_chExt_cy if old_chExt_cy else 1.0
+
+        # Shift parent off proportionally when chOff moves left/up
+        delta_chOff_x = new_chOff_x - old_chOff_x  # negative = leftward
+        delta_chOff_y = new_chOff_y - old_chOff_y  # negative = upward
+        new_off_x = gxfrm["off_x"] + int(delta_chOff_x * sx)
+        new_off_y = gxfrm["off_y"] + int(delta_chOff_y * sy)
+
+        # Expand parent ext proportionally
+        new_ext_cx = int(new_chExt_cx * sx)
+        new_ext_cy = int(new_chExt_cy * sy)
+
+        # Update XML elements in-place
+        gxfrm["_off"].set('x', str(new_off_x))
+        gxfrm["_off"].set('y', str(new_off_y))
+        gxfrm["_ext"].set('cx', str(new_ext_cx))
+        gxfrm["_ext"].set('cy', str(new_ext_cy))
+        gxfrm["_chOff"].set('x', str(new_chOff_x))
+        gxfrm["_chOff"].set('y', str(new_chOff_y))
+        gxfrm["_chExt"].set('cx', str(new_chExt_cx))
+        gxfrm["_chExt"].set('cy', str(new_chExt_cy))
+
+        # Update cached values so subsequent calls see the new bounds
+        gxfrm["off_x"] = new_off_x
+        gxfrm["off_y"] = new_off_y
+        gxfrm["ext_cx"] = new_ext_cx
+        gxfrm["ext_cy"] = new_ext_cy
+        gxfrm["chOff_x"] = new_chOff_x
+        gxfrm["chOff_y"] = new_chOff_y
+        gxfrm["chExt_cx"] = new_chExt_cx
+        gxfrm["chExt_cy"] = new_chExt_cy
+
+    def _apply_shape_moves(self, cSld, moves):
+        """Reposition shapes within a cSld XML tree.
+
+        Each move dict has:
+          - text: find shape by text content (optional)
+          - shape_name: find shape by name (optional)
+          - left: new x position in inches (optional)
+          - top: new y position in inches (optional)
+
+        Supports both top-level and grouped shapes. For grouped shapes,
+        slide-space coordinates are converted to the group's child-space.
+        Rotated groups emit a warning (coordinates may be inaccurate).
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        for move in moves:
+            find_text = move.get("text")
+            find_name = move.get("shape_name")
+            new_left = move.get("left")
+            new_top = move.get("top")
+
+            if not find_text and not find_name:
+                continue
+            if new_left is None and new_top is None:
+                continue
+
+            if find_text:
+                find_text = self._normalize_text(find_text)
+
+            for sp in cSld.findall(f'.//{{{ns_p}}}sp'):
+                matched = False
+
+                if find_name:
+                    name = self._get_shape_name_from_sp(sp)
+                    if name == find_name:
+                        matched = True
+
+                if find_text and not matched:
+                    txBody = sp.find(f'{{{ns_p}}}txBody')
+                    if txBody is None:
+                        txBody = sp.find(f'{{{ns_a}}}txBody')
+                    if txBody is not None:
+                        full = ""
+                        for p in txBody.findall(f'{{{ns_a}}}p'):
+                            full += self._concat_paragraph_text(p) + " "
+                        full = self._normalize_text(full)
+                        if find_text in full:
+                            matched = True
+
+                if not matched:
+                    continue
+
+                # Find shape's spPr and current offset
+                spPr = None
+                for spPr_ns in [ns_p, ns_a]:
+                    spPr = sp.find(f'{{{spPr_ns}}}spPr')
+                    if spPr is not None:
+                        break
+                if spPr is None:
+                    break
+
+                xfrm = spPr.find(f'{{{ns_a}}}xfrm')
+                if xfrm is None:
+                    break
+                off = xfrm.find(f'{{{ns_a}}}off')
+                ext = xfrm.find(f'{{{ns_a}}}ext')
+                if off is None:
+                    break
+
+                parent = sp.getparent()
+                is_grouped = (parent is not None
+                              and parent.tag == f'{{{ns_p}}}grpSp')
+
+                if is_grouped:
+                    gxfrm = self._get_group_transform(parent)
+                    if gxfrm is None:
+                        break
+
+                    if gxfrm["has_rotation"]:
+                        print(f"Warning: moving shape in rotated group — "
+                              f"position may be inaccurate", file=sys.stderr)
+
+                    # Current child-space position
+                    cur_child_x = int(off.get('x', '0'))
+                    cur_child_y = int(off.get('y', '0'))
+
+                    # For unmoved axes, back-compute slide-space from child-space
+                    cur_slide_x, cur_slide_y = self._child_to_slide_coords(
+                        cur_child_x, cur_child_y, gxfrm
+                    )
+
+                    target_x_emu = (int(new_left * self._EMU_PER_INCH)
+                                    if new_left is not None
+                                    else cur_slide_x)
+                    target_y_emu = (int(new_top * self._EMU_PER_INCH)
+                                    if new_top is not None
+                                    else cur_slide_y)
+
+                    # Get child shape dimensions for bounds expansion
+                    child_w = int(ext.get('cx', '0')) if ext is not None else 0
+                    child_h = int(ext.get('cy', '0')) if ext is not None else 0
+
+                    # Convert target to child-space
+                    child_x, child_y = self._slide_to_child_coords(
+                        target_x_emu, target_y_emu, gxfrm
+                    )
+
+                    # Expand group bounds if shape would exceed them
+                    self._expand_group_bounds(
+                        gxfrm, child_x, child_y, child_w, child_h
+                    )
+
+                    # Recalculate child coords after expansion (chOff may have shifted)
+                    child_x, child_y = self._slide_to_child_coords(
+                        target_x_emu, target_y_emu, gxfrm
+                    )
+
+                    off.set('x', str(child_x))
+                    off.set('y', str(child_y))
+                else:
+                    # Top-level shape: direct EMU assignment
+                    if new_left is not None:
+                        off.set('x', str(int(new_left * self._EMU_PER_INCH)))
+                    if new_top is not None:
+                        off.set('y', str(int(new_top * self._EMU_PER_INCH)))
+
+                break  # One move per entry
+
+    def _apply_group_moves(self, cSld, moves):
+        """Reposition entire groups within a cSld XML tree.
+
+        Each move dict has:
+          - text: find group containing a child shape with this text (optional)
+          - group_name: find group by its own name (optional)
+          - left: new x position in inches (optional)
+          - top: new y position in inches (optional)
+
+        Moves all children together by updating the group's own offset.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        for move in moves:
+            find_text = move.get("text")
+            find_group_name = move.get("group_name")
+            new_left = move.get("left")
+            new_top = move.get("top")
+
+            if not find_text and not find_group_name:
+                continue
+            if new_left is None and new_top is None:
+                continue
+
+            if find_text:
+                find_text = self._normalize_text(find_text)
+
+            for grpSp in cSld.findall(f'.//{{{ns_p}}}grpSp'):
+                matched = False
+
+                if find_group_name:
+                    # Check group's own name in nvGrpSpPr/cNvPr
+                    for ns in [ns_p, ns_a]:
+                        cNvPr = grpSp.find(f'{{{ns}}}nvGrpSpPr/{{{ns}}}cNvPr')
+                        if cNvPr is not None:
+                            if cNvPr.get('name', '') == find_group_name:
+                                matched = True
+                            break
+
+                if find_text and not matched:
+                    # Search child shapes for matching text
+                    for sp in grpSp.findall(f'{{{ns_p}}}sp'):
+                        txBody = sp.find(f'{{{ns_p}}}txBody')
+                        if txBody is None:
+                            txBody = sp.find(f'{{{ns_a}}}txBody')
+                        if txBody is not None:
+                            full = ""
+                            for p in txBody.findall(f'{{{ns_a}}}p'):
+                                full += self._concat_paragraph_text(p) + " "
+                            full = self._normalize_text(full)
+                            if find_text in full:
+                                matched = True
+                                break
+
+                if not matched:
+                    continue
+
+                # Update the group's own offset
+                gxfrm = self._get_group_transform(grpSp)
+                if gxfrm is None:
+                    break
+
+                if new_left is not None:
+                    gxfrm["_off"].set('x', str(int(new_left * self._EMU_PER_INCH)))
+                if new_top is not None:
+                    gxfrm["_off"].set('y', str(int(new_top * self._EMU_PER_INCH)))
+
+                break  # One move per entry
 
     def _add_image_to_slide(self, slide, image_blob: bytes,
                             content_type: str) -> str:

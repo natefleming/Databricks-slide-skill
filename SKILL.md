@@ -278,7 +278,7 @@ See "Designing the Presentation" above for how to choose between these.
 
 | Type | Description | Schema |
 |------|-------------|--------|
-| `architecture` | Pre-built architecture diagram from catalog | catalog_slide (1-based slide number), notes? |
+| `architecture` | Pre-built architecture diagram from catalog | catalog_slide, title?, notes?, modifications? |
 
 **Schema notation:** `field?` = optional, `[strings]` = string array, `[{a, b}]` = object array, `bool` = true/false
 
@@ -304,14 +304,48 @@ A catalog of 55 pre-built Databricks architecture diagrams is available for impo
 - Reference architecture walkthroughs
 - Any deck at L200+ depth that benefits from official architecture visuals
 
+### Two Categories of Catalog Slides
+
+1. **Reference Architecture (slides 65-76)** — These are the primary slides targeted for customer-specific modification. They share a common base diagram showing the full Databricks platform with different data flows highlighted. Customize sources, consumers, and titles for each customer. The catalog JSON includes a `reference_arch` object with categorized labels and guidance.
+
+2. **All other slides (6-63, 78)** — Academic/educational diagrams covering compute, security, data architecture, etc. Include these as-is for technical depth. They can still be customized with `text_replacements` if needed, but typically don't require modification.
+
 ### JSON Format
 
+Basic (no customization):
 ```json
 {"type": "architecture", "catalog_slide": 14, "notes": "Optional custom speaker notes"}
 ```
 
+With customization (reference architecture example — customer has Oracle and Salesforce only):
+```json
+{
+  "type": "architecture",
+  "catalog_slide": 66,
+  "title": "Acme Corp — Ingestion with Lakeflow Connect",
+  "notes": "Custom speaker notes...",
+  "modifications": {
+    "text_replacements": [
+      {"find": "RDBMS", "replace": "Oracle ERP", "match_index": 0},
+      {"find": "SaaS", "replace": "Salesforce", "match_index": 1}
+    ],
+    "remove_shapes": [
+      {"text": "Files / Logs"},
+      {"text": "Sensors and IoT"},
+      {"text": "Business Apps"},
+      {"text": "Media"},
+      {"text": "HMS*"},
+      {"text": "Data Shares"},
+      {"text": "Marketplaces"}
+    ]
+  }
+}
+```
+
 - `catalog_slide` (required): 1-based slide number from the catalog (see index below)
+- `title` (optional): Override the slide title text
 - `notes` (optional): Custom speaker notes. If omitted, the catalog's built-in talk track is used.
+- `modifications` (optional): Object with customization operations (see below)
 
 ### Usage Guidelines
 
@@ -320,6 +354,51 @@ A catalog of 55 pre-built Databricks architecture diagrams is available for impo
 - Mix freely with other slide types — they work alongside generated slides
 - Multiple architecture slides can reference the same catalog slide
 - Section header slides from the catalog (kind=section) can also be imported, but prefer using the native `section` slide type for visual consistency
+- Omitting the `modifications` key produces identical behavior to the original import (fully backward compatible)
+
+### Customizing Architecture Slides
+
+Imported diagram slides can be personalized for specific customers and use cases using the `modifications` object. All modifications are optional and can be combined.
+
+**`text_replacements`** — Replace labels on the diagram:
+- `find`: exact text to match (Unicode-normalized, whitespace-collapsed)
+- `replace`: replacement text
+- `shape_name` (optional): limit to a specific shape by name for disambiguation
+- `match_index` (optional): 0-based index when find text appears multiple times
+
+**`overlays`** — Add new shapes or icons on top of the diagram:
+- `type`: "textbox", "rectangle", "rounded_rectangle", "oval", or "icon"
+- `left`, `top`, `width`, `height`: position/size in inches
+- `text`, `font_size`, `font_color`, `fill_color`, `border_color`, `bold`: styling options (shape types)
+- `icon`: catalog icon name, e.g. "openai", "kafka" (icon type only)
+- `image_path`: path to a custom image file (icon type only, used when icon is not set)
+- For icon type: if only `width` or `height` is given, the other preserves aspect ratio
+
+**`remove_shapes`** — Remove shapes from the diagram:
+- `text`: match shapes containing this text
+- `shape_name`: match by shape name attribute
+- `remove_group` (optional, default `true`): when the matched shape is inside a group, remove the entire parent group (icon + label together). Set to `false` to remove only the text shape.
+
+**`move_shapes`** — Reposition individual shapes (works for both top-level and grouped shapes):
+- `text` or `shape_name`: identify the shape
+- `left`, `top`: new position in inches (slide-space — coordinates are automatically converted to group child-space for grouped shapes)
+- Group bounds are expanded automatically if a moved child shape would exceed them
+
+**`move_groups`** — Reposition entire groups (all children move together):
+- `text`: find group containing a child shape with this text
+- `group_name`: find group by its name attribute
+- `left`, `top`: new position in inches
+
+**Best practices:**
+- Use the `text_labels` array in the catalog JSON to see available labels for each diagram slide
+- Use specific `find` text to avoid unintended replacements — shorter strings may match in multiple shapes
+- Modified shapes automatically get PowerPoint's native auto-fit enabled, so text shrinks to fit — but very long replacements will still look cramped
+- Use `shape_name` for disambiguation when the same text appears in multiple shapes
+- Use overlays sparingly — they sit on top of existing content and may obscure shapes
+- Shape moves in rotated groups may produce inaccurate positioning (a warning is emitted to stderr)
+- Moving shapes between groups is not supported — use `remove_shapes` + `overlays` instead
+- `remove_shapes` runs before `text_replacements`, so use the original label text (e.g., `"RDBMS / DWH"`) not the replaced text
+- Text replacement matches within a single paragraph. Multi-line labels (e.g., "SQL Warehouses\n(DWH and BI)") should be targeted by the first line only (e.g., `"find": "SQL Warehouses"`). The `text_labels` in the catalog JSON shows the full concatenated text, but match against individual lines.
 
 ### Catalog Index
 
@@ -447,28 +526,89 @@ Organized by topic section. Slides marked with shape counts to indicate complexi
 | 62 | DBFS (Databricks File System) | 26 | overview |
 | 63 | Filesystems in Databricks | 20 | overview |
 
-**Reference Architecture**
+**Reference Architecture (slides 65-76) — customizable for customers**
 
-| Slide | Title | Shapes | Tags |
-|-------|-------|--------|------|
-| 65 | Databricks Data Intelligence Platform (full reference) | 133 | — |
-| 66 | 1 Built in ingestion from SaaS and databases | 99 | — |
-| 67 | 2 Batch ingestion and ETL | 119 | — |
-| 68 | 3 Streaming and Change Data Capture | 123 | — |
-| 69 | 4 Machine Learning (traditional) | 139 | — |
-| 70 | 5 Gen AI: Agents | 151 | — |
-| 71 | 6 Business Intelligence | 109 | — |
-| 72 | 7 Business Apps | 110 | — |
-| 73 | 8 Lakehouse Federation | 87 | — |
-| 74 | 9 Catalog Federation | 89 | — |
-| 75 | 10a Sharing Data | 94 | — |
-| 76 | 10b Consuming Shared Data | 90 | — |
+These are the primary slides for customer-specific modification. Each shows the same base Databricks platform diagram with a different data flow highlighted. The catalog JSON includes a `reference_arch` object for each with `sources` (left-edge data systems), `consumers` (right-edge downstream tools), and `flow` (which data path is highlighted).
+
+**When to customize:** Replace generic source/consumer labels with the customer's actual systems (e.g., "RDBMS" → "Oracle ERP", "BI Tool" → "Tableau"). **Remove sources and consumers that are not relevant** to the customer using `remove_shapes` — if the customer only has two data sources, remove the other generic source labels so the diagram accurately reflects their environment. Databricks product names in the middle of the diagram should stay as-is. Use `title` to brand the slide for the customer.
+
+**Choosing which slide:** Pick the slide whose `flow` matches the use case you're presenting. Slide 65 is the full overview with no specific flow highlighted — good for general platform introductions.
+
+| Slide | Flow | Shapes |
+|-------|------|--------|
+| 65 | Full platform overview — no specific flow highlighted | 133 |
+| 66 | Built-in ingestion from SaaS and databases (Lakeflow Connect) | 99 |
+| 67 | Batch ingestion and ETL (AutoLoader, Spark, Declarative Pipelines) | 119 |
+| 68 | Streaming and Change Data Capture | 123 |
+| 69 | Machine Learning — traditional ML workflow | 139 |
+| 70 | Generative AI — Agents and LLM serving | 151 |
+| 71 | Business Intelligence (SQL Warehouses, Dashboards, Genie) | 109 |
+| 72 | Business Apps (Databricks Apps) | 110 |
+| 73 | Lakehouse Federation (query external data in place) | 87 |
+| 74 | Catalog Federation (integrate external HMS/catalogs) | 89 |
+| 75 | Sharing Data outbound (Delta Sharing) | 94 |
+| 76 | Consuming Shared Data inbound | 90 |
 
 **Appendix**
 
 | Slide | Title | Shapes | Tags |
 |-------|-------|--------|------|
 | 78 | Communication with DBFS | 34 | azure |
+
+## Icon Catalog
+
+A catalog of vendor and technology icons extracted from the architecture catalog PPTX. Use these to place logos/icons on architecture diagram slides via the `icon` overlay type.
+
+### Using Icons
+
+From the icon catalog (recommended):
+```json
+{"type": "icon", "icon": "openai", "left": 1.0, "top": 3.0, "width": 0.4}
+```
+
+With a custom image file:
+```json
+{"type": "icon", "image_path": "/path/to/custom-logo.png", "left": 2.0, "top": 3.0, "width": 0.4, "height": 0.4}
+```
+
+- If only `width` or `height` is given, the other dimension preserves the original aspect ratio
+- If neither is given, the image is placed at its original size
+- Icons are placed on top of existing slide content
+
+### Available Icons by Category
+
+Each icon has a description, category, and keywords in `assets/icons/icon_catalog.json`. Use the icon name as the `icon` value in overlays.
+
+**AWS** — amazon-s3, athena, aws-dynamodb, aws-emr, aws-eventbridge, aws-glue, aws-iot-core, aws-kinesis, aws-lambda, aws-rds, aws-redshift, aws-s3, aws-sagemaker, emr, glue, redshift
+
+**Azure** — azure-active-directory, azure-cosmos-db, azure-data-factory, azure-data-lake-storage, azure-event-hubs, azure-functions, azure-iot-hub, azure-sql-database, azure-synapse, microsoft-adls
+
+**GCP** — gcp-bigquery, gcp-cloud-functions, gcp-cloud-sql, gcp-cloud-storage, gcp-dataflow, gcp-dataproc, gcp-pub-sub, gcp-vertex-ai, google-cloud-storage
+
+**Databricks** — account-console, apps, batch-and-streaming, bi, control-plane, curated, data-shares, delta-sharing, enterprise-catalog, ingest-tool, ingestion, lakeflowjobs, lakehouse, managed-tables, marketplace, marketplaces, notebooks, online-tables, photon-1, spark-stream, unity-catalog, workspace
+
+**Data Platforms** — apache-spark, apache-spark-logo, apache-spark-logo-large, dremio, fabric, flink, hms, kafka, salesforce, snowflake, starburst, trino
+
+**Compute** — classic-compute, cloud-cluster-green, cloud-cluster-orange, cluster, cluster-disks, cluster-or-sql-warehouse, compute, driver, sql-warehouses, unallocated-pool
+
+**Storage** — cloud-database, cloud-database-large, database, database-cylinder, files-logs, rdbms, root-bucket, storage
+
+**Data Formats** — delta-lake, delta-lake-logo, iceberg-logo, iceberg-mark, iceberg-rest, parquet, pyiceberg
+
+**AI & ML** — ai-models-tools, anthropic, feature-enhanced, feature-reduction, huggingface, langchain, mlflow, time-series-resampled-interpolated
+
+**Integration** — 3p-data-platform, external-orchestrator, github-icon-1, github-icon-2, jdbc-database
+
+**Security** — audit-log, id-provider, key-management, key-small, key-vault, write-audit-log
+
+**User & Access** — admin, user, username, users, users-small
+
+**Generic** — cloud-network, media, sensors-and-iot
+
+To regenerate the icon catalog after updating the architecture catalog PPTX:
+```bash
+python3 {baseDir}/scripts/build-icon-catalog.py
+```
 
 ## Content Best Practices
 
