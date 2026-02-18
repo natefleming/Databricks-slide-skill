@@ -278,7 +278,7 @@ See "Designing the Presentation" above for how to choose between these.
 
 | Type | Description | Schema |
 |------|-------------|--------|
-| `architecture` | Pre-built architecture diagram from catalog | catalog_slide, title?, notes?, modifications? |
+| `architecture` | Pre-built architecture diagram from catalog | catalog_slide, title?, notes?, modifications?: {text_replacements?, remove_shapes?, move_shapes?, move_groups?, overlays?, add_connectors?} |
 
 **Schema notation:** `field?` = optional, `[strings]` = string array, `[{a, b}]` = object array, `bool` = true/false
 
@@ -389,6 +389,30 @@ Imported diagram slides can be personalized for specific customers and use cases
 - `group_name`: find group by its name attribute
 - `left`, `top`: new position in inches
 
+**`add_connectors`** — Add new arrows/connectors between components:
+- `from_text` or `from_name`: identify the source shape
+- `to_text` or `to_name`: identify the target shape
+- `from_point` (optional): connection point — "top", "right", "bottom", "left" (auto-detected if omitted)
+- `to_point` (optional): same as from_point
+- `line_color` (optional): hex color string, e.g. "#FF3621" (default black)
+- `line_width` (optional): width in points (default 1)
+- `dash_style` (optional): "dash", "dot", etc. (omit for solid)
+- `arrow` (optional): "end" (default), "start", "both", "none"
+
+Example:
+```json
+"add_connectors": [
+  {"from_text": "SQL Server", "to_text": "Bronze", "line_color": "#FF3621", "arrow": "end"},
+  {"from_text": "Salesforce", "to_text": "Bronze", "from_point": "right", "to_point": "left"}
+]
+```
+
+**Connector auto-management:**
+- When shapes are removed, connectors referencing them are automatically cleaned up
+- When an intermediate shape in a linear chain is removed (A → B → C), the system auto-reconnects: A → C
+- After all moves and modifications, connector endpoints are recalculated to match current shape positions
+- All connector references are verified post-modification; warnings are printed for any issues
+
 **Best practices:**
 - Use the `text_labels` array in the catalog JSON to see available labels for each diagram slide
 - Use specific `find` text to avoid unintended replacements — shorter strings may match in multiple shapes
@@ -399,6 +423,11 @@ Imported diagram slides can be personalized for specific customers and use cases
 - Moving shapes between groups is not supported — use `remove_shapes` + `overlays` instead
 - `remove_shapes` runs before `text_replacements`, so use the original label text (e.g., `"RDBMS / DWH"`) not the replaced text
 - Text replacement matches within a single paragraph. Multi-line labels (e.g., "SQL Warehouses\n(DWH and BI)") should be targeted by the first line only (e.g., `"find": "SQL Warehouses"`). The `text_labels` in the catalog JSON shows the full concatenated text, but match against individual lines.
+- Use `--verify` when generating to export slides as PNG images for visual inspection (requires LibreOffice):
+  ```bash
+  python3 {baseDir}/scripts/generate-pptx.py --input content.json --output deck.pptx --verify
+  ```
+- The generator prints connector diagnostics (shapes, connectors, bridge counts) for architecture slides with modifications — review these messages to confirm correct wiring
 
 ### Catalog Index
 

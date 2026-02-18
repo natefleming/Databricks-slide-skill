@@ -1548,21 +1548,51 @@ class DatabricksSlideGenerator:
             blip.set(f'{{{nsmap_r}}}embed', new_rId)
 
         # --- Apply pre-insertion modifications (XML-level) ---
-        # Order: remove first (on original labels), then replace, then move
+        # Order: snapshot IDs, remove shapes + fix connectors, replace text,
+        #        override title, move shapes/groups, add connectors,
+        #        recalculate connector endpoints, verify.
         modifications = data.get("modifications", {})
+        has_modifications = bool(modifications)
 
+        # 1. Snapshot shape IDs before any removals (for orphan detection)
+        pre_ids = self._collect_shape_ids(new_cSld) if has_modifications else {}
+
+        # 2. Remove shapes, clean up empty containers, fix orphaned connectors
         if modifications.get("remove_shapes"):
             self._apply_shape_removals(new_cSld, modifications["remove_shapes"])
             self._cleanup_empty_containers(new_cSld)
+            self._remove_orphaned_connectors(new_cSld, pre_ids)
+
+        # 3. Text replacements
         if modifications.get("text_replacements"):
             modified = self._apply_text_replacements(new_cSld, modifications["text_replacements"])
             self._auto_fit_text(new_cSld, modified_txbodies=modified)
+
+        # 4. Title override
         if data.get("title"):
             self._apply_title_override(new_cSld, data["title"])
+
+        # 5. Shape and group moves
         if modifications.get("move_shapes"):
             self._apply_shape_moves(new_cSld, modifications["move_shapes"])
         if modifications.get("move_groups"):
             self._apply_group_moves(new_cSld, modifications["move_groups"])
+
+        # 6. Add explicit connectors (user-specified)
+        if modifications.get("add_connectors"):
+            self._apply_connector_additions(
+                new_cSld, modifications["add_connectors"]
+            )
+
+        # 7. Recalculate all connector endpoints to match current positions
+        if has_modifications:
+            self._update_connector_endpoints(new_cSld)
+
+        # 8. Verify connector integrity
+        if has_modifications:
+            issues = self._verify_architecture_modifications(new_cSld)
+            for issue in issues:
+                print(f"  Warning: {issue}", file=sys.stderr)
 
         # Replace the target slide's cSld with the copied one
         target_cSld = target_slide._element.find(
@@ -2774,6 +2804,960 @@ class DatabricksSlideGenerator:
 
                 break  # One move per entry
 
+    # =========================================================================
+    # Connector Management Methods
+    # =========================================================================
+
+    def _collect_shape_ids(self, cSld) -> Dict[str, Any]:
+        """Build a mapping of cNvPr id -> element for all shapes in a cSld.
+
+        Covers sp, grpSp, and pic elements at all nesting levels.
+        Connector shapes (cxnSp) are excluded since they reference
+        these IDs rather than being referenced by them.
+
+        Returns:
+            Dict mapping id string -> XML element.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+        id_map: Dict[str, Any] = {}
+
+        for sp in cSld.findall(f'.//{{{ns_p}}}sp'):
+            for ns in [ns_p, ns_a]:
+                cNvPr = sp.find(f'{{{ns}}}nvSpPr/{{{ns}}}cNvPr')
+                if cNvPr is not None:
+                    shape_id = cNvPr.get('id')
+                    if shape_id:
+                        id_map[shape_id] = sp
+                    break
+
+        for grp in cSld.findall(f'.//{{{ns_p}}}grpSp'):
+            for ns in [ns_p, ns_a]:
+                cNvPr = grp.find(f'{{{ns}}}nvGrpSpPr/{{{ns}}}cNvPr')
+                if cNvPr is not None:
+                    shape_id = cNvPr.get('id')
+                    if shape_id:
+                        id_map[shape_id] = grp
+                    break
+
+        for pic in cSld.findall(f'.//{{{ns_p}}}pic'):
+            for ns in [ns_p, ns_a]:
+                cNvPr = pic.find(f'{{{ns}}}nvPicPr/{{{ns}}}cNvPr')
+                if cNvPr is not None:
+                    shape_id = cNvPr.get('id')
+                    if shape_id:
+                        id_map[shape_id] = pic
+                    break
+
+        return id_map
+
+    def _get_max_shape_id(self, cSld) -> int:
+        """Find the highest cNvPr id value in the cSld tree.
+
+        Used to generate unique IDs for new connector shapes.
+        """
+        ns_p = self._NS_P
+        max_id = 0
+        for cNvPr in cSld.findall(f'.//{{{ns_p}}}cNvPr'):
+            try:
+                val = int(cNvPr.get('id', '0'))
+                if val > max_id:
+                    max_id = val
+            except ValueError:
+                pass
+        return max_id
+
+    def _get_shape_bounds_in_slide_coords(
+        self, shape_elem
+    ) -> Optional[Tuple[int, int, int, int]]:
+        """Get a shape's bounding box in slide-space EMU coordinates.
+
+        Handles top-level shapes and shapes nested inside one or more
+        groups by walking up the parent chain and applying group
+        coordinate transforms at each level.
+
+        Args:
+            shape_elem: An sp, grpSp, or pic XML element.
+
+        Returns:
+            (x, y, cx, cy) in EMU slide coordinates, or None if
+            the shape's transform could not be resolved.
+        """
+        from lxml import etree
+
+        ns_a = self._NS_A
+        ns_p = self._NS_P
+
+        tag = etree.QName(shape_elem.tag).localname
+        x: Optional[int] = None
+        y: Optional[int] = None
+        cx: Optional[int] = None
+        cy: Optional[int] = None
+
+        if tag == 'grpSp':
+            gxfrm = self._get_group_transform(shape_elem)
+            if gxfrm is None:
+                return None
+            x, y = gxfrm["off_x"], gxfrm["off_y"]
+            cx, cy = gxfrm["ext_cx"], gxfrm["ext_cy"]
+        else:
+            for ns in [ns_p, ns_a]:
+                spPr = shape_elem.find(f'{{{ns}}}spPr')
+                if spPr is not None:
+                    xfrm = spPr.find(f'{{{ns_a}}}xfrm')
+                    if xfrm is not None:
+                        off = xfrm.find(f'{{{ns_a}}}off')
+                        ext = xfrm.find(f'{{{ns_a}}}ext')
+                        if off is not None and ext is not None:
+                            x = int(off.get('x', '0'))
+                            y = int(off.get('y', '0'))
+                            cx = int(ext.get('cx', '0'))
+                            cy = int(ext.get('cy', '0'))
+                            break
+
+        if x is None:
+            return None
+
+        # Walk up parent chain, converting through group transforms
+        current = shape_elem
+        while True:
+            parent = current.getparent()
+            if parent is None:
+                break
+            parent_tag = etree.QName(parent.tag).localname
+            if parent_tag != 'grpSp':
+                break
+
+            gxfrm = self._get_group_transform(parent)
+            if gxfrm is None:
+                break
+
+            if gxfrm["chExt_cx"] > 0 and gxfrm["chExt_cy"] > 0:
+                sx = gxfrm["ext_cx"] / gxfrm["chExt_cx"]
+                sy = gxfrm["ext_cy"] / gxfrm["chExt_cy"]
+
+                x = gxfrm["off_x"] + int((x - gxfrm["chOff_x"]) * sx)
+                y = gxfrm["off_y"] + int((y - gxfrm["chOff_y"]) * sy)
+                cx = int(cx * sx)
+                cy = int(cy * sy)
+
+            current = parent
+
+        return (x, y, cx, cy)
+
+    @staticmethod
+    def _get_connection_point(x: int, y: int, cx: int, cy: int,
+                              idx: int) -> Tuple[int, int]:
+        """Calculate a connection point position from shape bounds.
+
+        Standard OOXML connection point indices for rectangles:
+          0 = top center
+          1 = right center
+          2 = bottom center
+          3 = left center
+
+        Args:
+            x, y, cx, cy: Shape bounding box in EMU.
+            idx: Connection point index.
+
+        Returns:
+            (point_x, point_y) in EMU.
+        """
+        points = {
+            0: (x + cx // 2, y),
+            1: (x + cx, y + cy // 2),
+            2: (x + cx // 2, y + cy),
+            3: (x, y + cy // 2),
+        }
+        return points.get(idx, (x + cx // 2, y + cy // 2))
+
+    @staticmethod
+    def _get_named_connection_index(name: str) -> int:
+        """Convert a named connection point to an index.
+
+        Accepts: "top", "right", "bottom", "left".
+        Returns -1 for unrecognized names.
+        """
+        name_map = {"top": 0, "right": 1, "bottom": 2, "left": 3}
+        return name_map.get(name.lower(), -1)
+
+    def _get_all_connectors(self, cSld) -> List:
+        """Find all cxnSp elements in a cSld tree."""
+        return cSld.findall(f'.//{{{self._NS_P}}}cxnSp')
+
+    def _get_connector_refs(
+        self, cxnSp
+    ) -> Tuple[Optional[Tuple[str, int]], Optional[Tuple[str, int]]]:
+        """Extract start and end connection references from a connector.
+
+        Returns:
+            Tuple of (start_ref, end_ref) where each is either
+            (shape_id_str, connection_point_idx) or None.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        start_ref: Optional[Tuple[str, int]] = None
+        end_ref: Optional[Tuple[str, int]] = None
+
+        for ns in [ns_p, ns_a]:
+            cNvCxnSpPr = cxnSp.find(
+                f'{{{ns}}}nvCxnSpPr/{{{ns}}}cNvCxnSpPr'
+            )
+            if cNvCxnSpPr is not None:
+                stCxn = cNvCxnSpPr.find(f'{{{ns_a}}}stCxn')
+                if stCxn is not None:
+                    sid = stCxn.get('id')
+                    sidx = int(stCxn.get('idx', '0'))
+                    if sid:
+                        start_ref = (sid, sidx)
+
+                endCxn = cNvCxnSpPr.find(f'{{{ns_a}}}endCxn')
+                if endCxn is not None:
+                    eid = endCxn.get('id')
+                    eidx = int(endCxn.get('idx', '0'))
+                    if eid:
+                        end_ref = (eid, eidx)
+                break
+
+        return start_ref, end_ref
+
+    def _get_connector_line_style(self, cxnSp) -> Dict[str, Any]:
+        """Extract line style properties from a connector element.
+
+        Returns dict with keys: color, width, dash, head_end, tail_end.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+        style: Dict[str, Any] = {}
+
+        spPr = cxnSp.find(f'{{{ns_p}}}spPr')
+        if spPr is None:
+            return style
+
+        ln = spPr.find(f'{{{ns_a}}}ln')
+        if ln is None:
+            return style
+
+        w = ln.get('w')
+        if w:
+            style['width'] = int(w)
+
+        solidFill = ln.find(f'{{{ns_a}}}solidFill')
+        if solidFill is not None:
+            srgbClr = solidFill.find(f'{{{ns_a}}}srgbClr')
+            if srgbClr is not None:
+                style['color'] = srgbClr.get('val', '000000')
+
+        prstDash = ln.find(f'{{{ns_a}}}prstDash')
+        if prstDash is not None:
+            style['dash'] = prstDash.get('val')
+
+        tailEnd = ln.find(f'{{{ns_a}}}tailEnd')
+        if tailEnd is not None:
+            style['tail_end'] = tailEnd.get('type', 'none')
+
+        headEnd = ln.find(f'{{{ns_a}}}headEnd')
+        if headEnd is not None:
+            style['head_end'] = headEnd.get('type', 'none')
+
+        return style
+
+    def _build_connector_element(
+        self,
+        shape_id: int,
+        name: str,
+        start_pt: Tuple[int, int],
+        end_pt: Tuple[int, int],
+        start_shape_id: Optional[str] = None,
+        start_idx: int = 0,
+        end_shape_id: Optional[str] = None,
+        end_idx: int = 0,
+        line_color: str = '000000',
+        line_width: int = 12700,
+        arrow: str = 'end',
+        dash_style: Optional[str] = None,
+    ) -> Any:
+        """Build a cxnSp XML element for a straight connector.
+
+        Args:
+            shape_id: Unique shape ID for the new connector.
+            name: Display name for the connector.
+            start_pt: (x, y) start position in EMU.
+            end_pt: (x, y) end position in EMU.
+            start_shape_id: ID of shape at start (for stCxn reference).
+            start_idx: Connection point index at start shape.
+            end_shape_id: ID of shape at end (for endCxn reference).
+            end_idx: Connection point index at end shape.
+            line_color: Hex color string without '#' (default black).
+            line_width: Line width in EMU (default ~1pt = 12700).
+            arrow: Arrow style — 'end', 'start', 'both', 'none'.
+            dash_style: Dash preset (e.g. 'dash', 'dot') or None for solid.
+
+        Returns:
+            lxml Element for the connector shape.
+        """
+        from lxml import etree
+
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        sx, sy = start_pt
+        ex, ey = end_pt
+
+        x = min(sx, ex)
+        y = min(sy, ey)
+        cx_val = abs(ex - sx)
+        cy_val = abs(ey - sy)
+        flip_h = '1' if sx > ex else None
+        flip_v = '1' if sy > ey else None
+
+        cxnSp = etree.Element(f'{{{ns_p}}}cxnSp')
+
+        # nvCxnSpPr
+        nvCxnSpPr = etree.SubElement(cxnSp, f'{{{ns_p}}}nvCxnSpPr')
+        cNvPr = etree.SubElement(nvCxnSpPr, f'{{{ns_p}}}cNvPr')
+        cNvPr.set('id', str(shape_id))
+        cNvPr.set('name', name)
+
+        cNvCxnSpPr = etree.SubElement(nvCxnSpPr, f'{{{ns_p}}}cNvCxnSpPr')
+        if start_shape_id is not None:
+            stCxn = etree.SubElement(cNvCxnSpPr, f'{{{ns_a}}}stCxn')
+            stCxn.set('id', str(start_shape_id))
+            stCxn.set('idx', str(start_idx))
+        if end_shape_id is not None:
+            endCxn = etree.SubElement(cNvCxnSpPr, f'{{{ns_a}}}endCxn')
+            endCxn.set('id', str(end_shape_id))
+            endCxn.set('idx', str(end_idx))
+
+        etree.SubElement(nvCxnSpPr, f'{{{ns_p}}}nvPr')
+
+        # spPr
+        spPr = etree.SubElement(cxnSp, f'{{{ns_p}}}spPr')
+        xfrm = etree.SubElement(spPr, f'{{{ns_a}}}xfrm')
+        if flip_h:
+            xfrm.set('flipH', flip_h)
+        if flip_v:
+            xfrm.set('flipV', flip_v)
+
+        off = etree.SubElement(xfrm, f'{{{ns_a}}}off')
+        off.set('x', str(x))
+        off.set('y', str(y))
+        ext = etree.SubElement(xfrm, f'{{{ns_a}}}ext')
+        ext.set('cx', str(cx_val))
+        ext.set('cy', str(cy_val))
+
+        prstGeom = etree.SubElement(spPr, f'{{{ns_a}}}prstGeom')
+        prstGeom.set('prst', 'straightConnector1')
+        etree.SubElement(prstGeom, f'{{{ns_a}}}avLst')
+
+        ln = etree.SubElement(spPr, f'{{{ns_a}}}ln')
+        ln.set('w', str(line_width))
+        solidFill = etree.SubElement(ln, f'{{{ns_a}}}solidFill')
+        srgbClr = etree.SubElement(solidFill, f'{{{ns_a}}}srgbClr')
+        srgbClr.set('val', line_color.lstrip('#'))
+
+        if dash_style:
+            prstDash = etree.SubElement(ln, f'{{{ns_a}}}prstDash')
+            prstDash.set('val', dash_style)
+
+        if arrow in ('end', 'both'):
+            tailEnd = etree.SubElement(ln, f'{{{ns_a}}}tailEnd')
+            tailEnd.set('type', 'triangle')
+        if arrow in ('start', 'both'):
+            headEnd = etree.SubElement(ln, f'{{{ns_a}}}headEnd')
+            headEnd.set('type', 'triangle')
+
+        return cxnSp
+
+    def _remove_orphaned_connectors(
+        self, cSld, pre_removal_ids: Dict[str, Any]
+    ) -> None:
+        """Remove connectors that reference deleted shapes, with auto-reconnection.
+
+        When an intermediate shape is removed and it had exactly one incoming
+        and one outgoing connector, a bridge connector is created to maintain
+        the logical flow (A -> B -> C becomes A -> C when B is removed).
+
+        Connectors with both endpoints orphaned are removed entirely.
+        Connectors with one orphaned endpoint have the reference removed.
+
+        Args:
+            cSld: The cSld XML element after shape removals.
+            pre_removal_ids: Shape ID map from before removals
+                             (from _collect_shape_ids).
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        current_ids = self._collect_shape_ids(cSld)
+        removed_ids = set(pre_removal_ids.keys()) - set(current_ids.keys())
+
+        if not removed_ids:
+            return
+
+        connectors = self._get_all_connectors(cSld)
+        if not connectors:
+            return
+
+        # Build connectivity graph for auto-reconnection
+        # Maps: shape_id -> list of (peer_id, own_idx, peer_idx, connector, style)
+        incoming: Dict[str, List] = {}
+        outgoing: Dict[str, List] = {}
+
+        for cxn in connectors:
+            start_ref, end_ref = self._get_connector_refs(cxn)
+            if start_ref and end_ref:
+                from_id, from_idx = start_ref
+                to_id, to_idx = end_ref
+                style = self._get_connector_line_style(cxn)
+
+                outgoing.setdefault(from_id, []).append(
+                    (to_id, from_idx, to_idx, cxn, style)
+                )
+                incoming.setdefault(to_id, []).append(
+                    (from_id, from_idx, to_idx, cxn, style)
+                )
+
+        # Auto-reconnect: bridge linear chains through removed nodes
+        next_id = self._get_max_shape_id(cSld) + 1
+        bridge_count = 0
+        spTree = cSld.find(f'{{{ns_p}}}spTree')
+
+        for removed_id in removed_ids:
+            inc = incoming.get(removed_id, [])
+            out = outgoing.get(removed_id, [])
+
+            # Only auto-reconnect clear linear chains (1 in, 1 out)
+            if len(inc) != 1 or len(out) != 1:
+                continue
+
+            upstream_id, _, inc_to_idx, _, inc_style = inc[0]
+            downstream_id, out_from_idx, _, _, out_style = out[0]
+
+            # Skip if either neighbor was also removed
+            if upstream_id in removed_ids or downstream_id in removed_ids:
+                continue
+
+            upstream_elem = current_ids.get(upstream_id)
+            downstream_elem = current_ids.get(downstream_id)
+            if upstream_elem is None or downstream_elem is None:
+                continue
+
+            up_bounds = self._get_shape_bounds_in_slide_coords(upstream_elem)
+            down_bounds = self._get_shape_bounds_in_slide_coords(
+                downstream_elem
+            )
+            if up_bounds is None or down_bounds is None:
+                continue
+
+            start_pt = self._get_connection_point(*up_bounds, out_from_idx)
+            end_pt = self._get_connection_point(*down_bounds, inc_to_idx)
+
+            bridge_color = out_style.get(
+                'color', inc_style.get('color', '000000')
+            )
+            bridge_width = out_style.get(
+                'width', inc_style.get('width', 12700)
+            )
+            bridge_dash = out_style.get('dash', inc_style.get('dash'))
+
+            bridge = self._build_connector_element(
+                shape_id=next_id,
+                name=f'Bridge Connector {bridge_count + 1}',
+                start_pt=start_pt,
+                end_pt=end_pt,
+                start_shape_id=upstream_id,
+                start_idx=out_from_idx,
+                end_shape_id=downstream_id,
+                end_idx=inc_to_idx,
+                line_color=bridge_color,
+                line_width=bridge_width,
+                arrow='end',
+                dash_style=bridge_dash,
+            )
+
+            if spTree is not None:
+                spTree.append(bridge)
+                next_id += 1
+                bridge_count += 1
+
+        if bridge_count:
+            print(f"  Auto-reconnected: {bridge_count} bridge connector(s)")
+
+        # Remove orphaned connectors
+        removed_count = 0
+        for cxn in connectors:
+            start_ref, end_ref = self._get_connector_refs(cxn)
+            start_orphaned = (
+                start_ref is not None and start_ref[0] in removed_ids
+            )
+            end_orphaned = (
+                end_ref is not None and end_ref[0] in removed_ids
+            )
+
+            if start_orphaned and end_orphaned:
+                parent = cxn.getparent()
+                if parent is not None:
+                    parent.remove(cxn)
+                    removed_count += 1
+            elif start_orphaned or end_orphaned:
+                for ns in [ns_p, ns_a]:
+                    cNvCxnSpPr = cxn.find(
+                        f'{{{ns}}}nvCxnSpPr/{{{ns}}}cNvCxnSpPr'
+                    )
+                    if cNvCxnSpPr is not None:
+                        if start_orphaned:
+                            stCxn = cNvCxnSpPr.find(f'{{{ns_a}}}stCxn')
+                            if stCxn is not None:
+                                cNvCxnSpPr.remove(stCxn)
+                        if end_orphaned:
+                            endCxn = cNvCxnSpPr.find(f'{{{ns_a}}}endCxn')
+                            if endCxn is not None:
+                                cNvCxnSpPr.remove(endCxn)
+                        break
+
+                # Remove if no references remain at all
+                remaining_start, remaining_end = self._get_connector_refs(cxn)
+                if remaining_start is None and remaining_end is None:
+                    parent = cxn.getparent()
+                    if parent is not None:
+                        parent.remove(cxn)
+                        removed_count += 1
+
+        if removed_count:
+            print(f"  Removed: {removed_count} orphaned connector(s)")
+
+    def _find_shape_by_text_or_name(
+        self,
+        cSld,
+        text: Optional[str] = None,
+        shape_name: Optional[str] = None,
+    ) -> Optional[Tuple[str, Any]]:
+        """Find a shape by text content or name, returning (id, element).
+
+        Searches sp elements first, then groups (matching by child text).
+
+        Args:
+            cSld: The cSld XML element to search.
+            text: Text to search for in shapes (partial match).
+            shape_name: Exact shape name to match.
+
+        Returns:
+            (shape_id, shape_element) or None if not found.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        if text:
+            text = self._normalize_text(text)
+
+        for sp in cSld.findall(f'.//{{{ns_p}}}sp'):
+            if shape_name:
+                name = self._get_shape_name_from_sp(sp)
+                if name == shape_name:
+                    for ns in [ns_p, ns_a]:
+                        cNvPr = sp.find(f'{{{ns}}}nvSpPr/{{{ns}}}cNvPr')
+                        if cNvPr is not None:
+                            return (cNvPr.get('id'), sp)
+
+            if text:
+                txBody = sp.find(f'{{{ns_p}}}txBody')
+                if txBody is None:
+                    txBody = sp.find(f'{{{ns_a}}}txBody')
+                if txBody is not None:
+                    full = ""
+                    for p in txBody.findall(f'{{{ns_a}}}p'):
+                        full += self._concat_paragraph_text(p) + " "
+                    full = self._normalize_text(full)
+                    if text in full:
+                        for ns in [ns_p, ns_a]:
+                            cNvPr = sp.find(
+                                f'{{{ns}}}nvSpPr/{{{ns}}}cNvPr'
+                            )
+                            if cNvPr is not None:
+                                return (cNvPr.get('id'), sp)
+
+        # Also search groups (match by child text or group name)
+        for grp in cSld.findall(f'.//{{{ns_p}}}grpSp'):
+            if shape_name:
+                for ns in [ns_p, ns_a]:
+                    cNvPr = grp.find(
+                        f'{{{ns}}}nvGrpSpPr/{{{ns}}}cNvPr'
+                    )
+                    if cNvPr is not None:
+                        if cNvPr.get('name', '') == shape_name:
+                            return (cNvPr.get('id'), grp)
+                        break
+
+            if text:
+                for sp in grp.findall(f'{{{ns_p}}}sp'):
+                    txBody = sp.find(f'{{{ns_p}}}txBody')
+                    if txBody is None:
+                        txBody = sp.find(f'{{{ns_a}}}txBody')
+                    if txBody is not None:
+                        full = ""
+                        for p in txBody.findall(f'{{{ns_a}}}p'):
+                            full += self._concat_paragraph_text(p) + " "
+                        full = self._normalize_text(full)
+                        if text in full:
+                            for ns in [ns_p, ns_a]:
+                                cNvPr = grp.find(
+                                    f'{{{ns}}}nvGrpSpPr/{{{ns}}}cNvPr'
+                                )
+                                if cNvPr is not None:
+                                    return (cNvPr.get('id'), grp)
+                            break
+
+        return None
+
+    def _auto_detect_connection_points(
+        self,
+        from_bounds: Tuple[int, int, int, int],
+        to_bounds: Tuple[int, int, int, int],
+    ) -> Tuple[int, int]:
+        """Auto-detect the best connection point indices based on position.
+
+        Compares shape centers and picks the most natural connection
+        (right->left for horizontal, bottom->top for vertical).
+
+        Returns:
+            (from_idx, to_idx) where idx is 0=top, 1=right, 2=bottom, 3=left.
+        """
+        fx, fy, fcx, fcy = from_bounds
+        tx, ty, tcx, tcy = to_bounds
+
+        from_cx = fx + fcx // 2
+        from_cy = fy + fcy // 2
+        to_cx = tx + tcx // 2
+        to_cy = ty + tcy // 2
+
+        dx = to_cx - from_cx
+        dy = to_cy - from_cy
+
+        if abs(dx) > abs(dy):
+            if dx > 0:
+                return (1, 3)  # right -> left
+            else:
+                return (3, 1)  # left -> right
+        else:
+            if dy > 0:
+                return (2, 0)  # bottom -> top
+            else:
+                return (0, 2)  # top -> bottom
+
+    def _apply_connector_additions(
+        self, cSld, connectors: List[Dict[str, Any]]
+    ) -> None:
+        """Add new connector shapes between specified components.
+
+        Each connector dict has:
+          - from_text or from_name: identify the source shape
+          - to_text or to_name: identify the target shape
+          - from_point: "top", "right", "bottom", "left" (optional,
+                        auto-detected if omitted)
+          - to_point: same as from_point (optional)
+          - line_color: hex color string (optional, default "#000000")
+          - line_width: width in points (optional, default 1)
+          - dash_style: "dash", "dot", etc. or omit for solid (optional)
+          - arrow: "end", "start", "both", "none" (optional, default "end")
+        """
+        ns_p = self._NS_P
+        spTree = cSld.find(f'{{{ns_p}}}spTree')
+        if spTree is None:
+            return
+
+        next_id = self._get_max_shape_id(cSld) + 1
+        added_count = 0
+
+        for conn_spec in connectors:
+            from_text = conn_spec.get("from_text")
+            from_name = conn_spec.get("from_name")
+            to_text = conn_spec.get("to_text")
+            to_name = conn_spec.get("to_name")
+
+            from_result = self._find_shape_by_text_or_name(
+                cSld, text=from_text, shape_name=from_name
+            )
+            to_result = self._find_shape_by_text_or_name(
+                cSld, text=to_text, shape_name=to_name
+            )
+
+            if from_result is None:
+                label = from_text or from_name
+                print(
+                    f"Warning: add_connectors — source shape "
+                    f"'{label}' not found, skipping",
+                    file=sys.stderr,
+                )
+                continue
+            if to_result is None:
+                label = to_text or to_name
+                print(
+                    f"Warning: add_connectors — target shape "
+                    f"'{label}' not found, skipping",
+                    file=sys.stderr,
+                )
+                continue
+
+            from_id, from_elem = from_result
+            to_id, to_elem = to_result
+
+            from_bounds = self._get_shape_bounds_in_slide_coords(from_elem)
+            to_bounds = self._get_shape_bounds_in_slide_coords(to_elem)
+            if from_bounds is None or to_bounds is None:
+                print(
+                    "Warning: add_connectors — could not resolve shape "
+                    "bounds, skipping",
+                    file=sys.stderr,
+                )
+                continue
+
+            # Determine connection points
+            from_point_name = conn_spec.get("from_point")
+            to_point_name = conn_spec.get("to_point")
+
+            if from_point_name and to_point_name:
+                from_idx = self._get_named_connection_index(from_point_name)
+                to_idx = self._get_named_connection_index(to_point_name)
+                if from_idx == -1:
+                    from_idx = 1
+                if to_idx == -1:
+                    to_idx = 3
+            else:
+                from_idx, to_idx = self._auto_detect_connection_points(
+                    from_bounds, to_bounds
+                )
+
+            start_pt = self._get_connection_point(*from_bounds, from_idx)
+            end_pt = self._get_connection_point(*to_bounds, to_idx)
+
+            line_color = conn_spec.get("line_color", "#000000").lstrip('#')
+            line_width_pt = conn_spec.get("line_width", 1.0)
+            line_width_emu = int(line_width_pt * 12700)
+            arrow = conn_spec.get("arrow", "end")
+            dash = conn_spec.get("dash_style")
+            if dash == "solid":
+                dash = None
+
+            cxn_elem = self._build_connector_element(
+                shape_id=next_id,
+                name=f'Added Connector {added_count + 1}',
+                start_pt=start_pt,
+                end_pt=end_pt,
+                start_shape_id=from_id,
+                start_idx=from_idx,
+                end_shape_id=to_id,
+                end_idx=to_idx,
+                line_color=line_color,
+                line_width=line_width_emu,
+                arrow=arrow,
+                dash_style=dash,
+            )
+
+            spTree.append(cxn_elem)
+            next_id += 1
+            added_count += 1
+
+        if added_count:
+            print(f"  Added: {added_count} new connector(s)")
+
+    def _update_connector_endpoints(self, cSld) -> None:
+        """Recalculate xfrm for all connectors based on their connected shapes.
+
+        For each connector with stCxn and/or endCxn references, looks up the
+        current position of the referenced shapes and recalculates the
+        connector's xfrm so the arrow endpoints match the shapes' current
+        positions. This is critical for Google Slides which uses xfrm
+        directly rather than recalculating from connection references.
+
+        Should be called after all shape moves, group moves, and container
+        expansion are complete.
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+
+        current_ids = self._collect_shape_ids(cSld)
+        updated_count = 0
+
+        for cxn in self._get_all_connectors(cSld):
+            start_ref, end_ref = self._get_connector_refs(cxn)
+
+            if start_ref is None and end_ref is None:
+                continue
+
+            spPr = cxn.find(f'{{{ns_p}}}spPr')
+            if spPr is None:
+                continue
+            xfrm = spPr.find(f'{{{ns_a}}}xfrm')
+            if xfrm is None:
+                continue
+            off = xfrm.find(f'{{{ns_a}}}off')
+            ext = xfrm.find(f'{{{ns_a}}}ext')
+            if off is None or ext is None:
+                continue
+
+            cur_x = int(off.get('x', '0'))
+            cur_y = int(off.get('y', '0'))
+            cur_cx = int(ext.get('cx', '0'))
+            cur_cy = int(ext.get('cy', '0'))
+            flip_h = xfrm.get('flipH') == '1'
+            flip_v = xfrm.get('flipV') == '1'
+
+            # Determine current start and end points from xfrm + flips
+            if not flip_h and not flip_v:
+                old_start = (cur_x, cur_y)
+                old_end = (cur_x + cur_cx, cur_y + cur_cy)
+            elif flip_h and not flip_v:
+                old_start = (cur_x + cur_cx, cur_y)
+                old_end = (cur_x, cur_y + cur_cy)
+            elif not flip_h and flip_v:
+                old_start = (cur_x, cur_y + cur_cy)
+                old_end = (cur_x + cur_cx, cur_y)
+            else:
+                old_start = (cur_x + cur_cx, cur_y + cur_cy)
+                old_end = (cur_x, cur_y)
+
+            new_start = old_start
+            new_end = old_end
+
+            if start_ref:
+                s_id, s_idx = start_ref
+                s_elem = current_ids.get(s_id)
+                if s_elem is not None:
+                    bounds = self._get_shape_bounds_in_slide_coords(s_elem)
+                    if bounds is not None:
+                        new_start = self._get_connection_point(*bounds, s_idx)
+
+            if end_ref:
+                e_id, e_idx = end_ref
+                e_elem = current_ids.get(e_id)
+                if e_elem is not None:
+                    bounds = self._get_shape_bounds_in_slide_coords(e_elem)
+                    if bounds is not None:
+                        new_end = self._get_connection_point(*bounds, e_idx)
+
+            if new_start == old_start and new_end == old_end:
+                continue
+
+            # Recalculate xfrm from new endpoints
+            sx, sy = new_start
+            ex, ey = new_end
+            new_x = min(sx, ex)
+            new_y = min(sy, ey)
+            new_cx = abs(ex - sx)
+            new_cy = abs(ey - sy)
+            new_flip_h = sx > ex
+            new_flip_v = sy > ey
+
+            off.set('x', str(new_x))
+            off.set('y', str(new_y))
+            ext.set('cx', str(new_cx))
+            ext.set('cy', str(new_cy))
+
+            if new_flip_h:
+                xfrm.set('flipH', '1')
+            elif 'flipH' in xfrm.attrib:
+                del xfrm.attrib['flipH']
+
+            if new_flip_v:
+                xfrm.set('flipV', '1')
+            elif 'flipV' in xfrm.attrib:
+                del xfrm.attrib['flipV']
+
+            updated_count += 1
+
+        if updated_count:
+            print(f"  Updated: {updated_count} connector endpoint(s)")
+
+    def _verify_architecture_modifications(self, cSld) -> List[str]:
+        """Validate connector integrity after all modifications.
+
+        Checks:
+          - All stCxn/endCxn references point to existing shapes
+          - Connector xfrm positions are within slide bounds
+          - Reports diagnostic summary
+
+        Returns:
+            List of warning strings (empty if all checks pass).
+        """
+        ns_p = self._NS_P
+        ns_a = self._NS_A
+        issues: List[str] = []
+
+        current_ids = self._collect_shape_ids(cSld)
+        connectors = self._get_all_connectors(cSld)
+
+        # Slide bounds in EMU (13.333 x 7.5 inches)
+        slide_width = int(13.333 * self._EMU_PER_INCH)
+        slide_height = int(7.5 * self._EMU_PER_INCH)
+        margin = self._EMU_PER_INCH  # 1 inch tolerance
+
+        connected_count = 0
+        freestanding_count = 0
+        orphan_ref_count = 0
+
+        for cxn in connectors:
+            start_ref, end_ref = self._get_connector_refs(cxn)
+
+            if start_ref is None and end_ref is None:
+                freestanding_count += 1
+            else:
+                connected_count += 1
+
+            if start_ref and start_ref[0] not in current_ids:
+                orphan_ref_count += 1
+                issues.append(
+                    f"Connector references non-existent start shape "
+                    f"id={start_ref[0]}"
+                )
+
+            if end_ref and end_ref[0] not in current_ids:
+                orphan_ref_count += 1
+                issues.append(
+                    f"Connector references non-existent end shape "
+                    f"id={end_ref[0]}"
+                )
+
+            spPr = cxn.find(f'{{{ns_p}}}spPr')
+            if spPr is not None:
+                xfrm = spPr.find(f'{{{ns_a}}}xfrm')
+                if xfrm is not None:
+                    off_elem = xfrm.find(f'{{{ns_a}}}off')
+                    ext_elem = xfrm.find(f'{{{ns_a}}}ext')
+                    if off_elem is not None and ext_elem is not None:
+                        cx_pos = int(off_elem.get('x', '0'))
+                        cy_pos = int(off_elem.get('y', '0'))
+                        cw = int(ext_elem.get('cx', '0'))
+                        ch = int(ext_elem.get('cy', '0'))
+
+                        if (cx_pos + cw < -margin
+                                or cx_pos > slide_width + margin
+                                or cy_pos + ch < -margin
+                                or cy_pos > slide_height + margin):
+                            issues.append(
+                                f"Connector at ({cx_pos}, {cy_pos}) "
+                                f"size ({cw}x{ch}) is off-slide"
+                            )
+
+        total_shapes = len(current_ids)
+        total_connectors = len(connectors)
+        print(
+            f"  Verification: {total_shapes} shapes, "
+            f"{total_connectors} connectors "
+            f"({connected_count} connected, "
+            f"{freestanding_count} free-standing)"
+        )
+        if orphan_ref_count:
+            print(
+                f"  WARNING: {orphan_ref_count} orphaned connector "
+                f"reference(s) found"
+            )
+        if not issues:
+            print(f"  All connector references valid")
+
+        return issues
+
     def _add_image_to_slide(self, slide, image_blob: bytes,
                             content_type: str) -> str:
         """Add an image blob to a slide and return its relationship ID.
@@ -2883,12 +3867,76 @@ class DatabricksSlideGenerator:
 # CLI
 # =============================================================================
 
+def export_slides_as_images(pptx_path: str, output_dir: str) -> bool:
+    """Export PPTX slides as PNG images using LibreOffice headless.
+
+    Tries common LibreOffice installation paths on macOS, Linux, and
+    falls back to the PATH. Returns True if successful.
+
+    Args:
+        pptx_path: Path to the .pptx file.
+        output_dir: Directory to write PNG images to.
+    """
+    import subprocess
+    import shutil
+
+    soffice_candidates = [
+        '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+        shutil.which('soffice'),
+        shutil.which('libreoffice'),
+        '/usr/bin/libreoffice',
+        '/usr/bin/soffice',
+    ]
+
+    soffice = None
+    for candidate in soffice_candidates:
+        if candidate and Path(candidate).exists():
+            soffice = candidate
+            break
+
+    if soffice is None:
+        print("  LibreOffice not found — skipping image export.")
+        print("  Install LibreOffice for visual verification, or review "
+              "the .pptx manually.")
+        return False
+
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    try:
+        result = subprocess.run(
+            [
+                soffice, '--headless', '--convert-to', 'png',
+                '--outdir', output_dir, str(pptx_path),
+            ],
+            capture_output=True, text=True, timeout=120,
+        )
+        if result.returncode == 0:
+            png_files = sorted(Path(output_dir).glob('*.png'))
+            print(f"  Exported {len(png_files)} slide image(s) to {output_dir}/")
+            for png in png_files:
+                print(f"    {png.name}")
+            return True
+        else:
+            print(f"  LibreOffice export failed: {result.stderr.strip()}")
+            return False
+    except subprocess.TimeoutExpired:
+        print("  LibreOffice export timed out after 120 seconds")
+        return False
+    except Exception as e:
+        print(f"  LibreOffice export error: {e}")
+        return False
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate Databricks-branded PowerPoint presentations"
     )
     parser.add_argument("--input", "-i", required=True, help="Path to JSON content file")
     parser.add_argument("--output", "-o", required=True, help="Output path for .pptx file")
+    parser.add_argument(
+        "--verify", action="store_true",
+        help="Export slides as PNG images (via LibreOffice) for visual verification"
+    )
 
     args = parser.parse_args()
 
@@ -2903,6 +3951,12 @@ def main() -> None:
 
     print(f"✓ Generated: {output_path}")
     print(f"  Slides: {generator.slide_count}")
+
+    # Visual verification via image export
+    if args.verify:
+        verify_dir = str(Path(output_path).parent / "verify")
+        print(f"\n  Exporting slides for visual verification...")
+        export_slides_as_images(output_path, verify_dir)
 
 
 if __name__ == "__main__":
